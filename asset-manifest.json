@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/InterviewSimulator/static/css/main.e6c13ad2.css",
+    "main.js": "/InterviewSimulator/static/js/main.010d3dcc.js",
+    "static/js/453.ee5a4fc9.chunk.js": "/InterviewSimulator/static/js/453.ee5a4fc9.chunk.js",
+    "index.html": "/InterviewSimulator/index.html",
+    "main.e6c13ad2.css.map": "/InterviewSimulator/static/css/main.e6c13ad2.css.map",
+    "main.010d3dcc.js.map": "/InterviewSimulator/static/js/main.010d3dcc.js.map",
+    "453.ee5a4fc9.chunk.js.map": "/InterviewSimulator/static/js/453.ee5a4fc9.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.010d3dcc.js"
+  ]
+}
