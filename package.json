@@ -2,7 +2,7 @@
   "name": "interview-simulator",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://b01902041.github.io/InterviewSimulator",
+  "homepage": "https://uxai2025-clairechen.github.io/InterviewSimulator",
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.2",
