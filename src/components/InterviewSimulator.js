@@ -88,9 +88,15 @@ const InterviewSimulator = () => {
               role: "system",
               content: "You are an expert interviewer. Generate behavioral interview questions for the STAR method (Situation, Task, Action, Result)."
             },
+            // {
+            //   role: "user", 
+            //   content: "Generate 5 different behavioral interview questions that are perfect for the STAR method. Return only the questions as a simple JSON array of strings."
+            // }
             {
               role: "user", 
-              content: "Generate 5 different behavioral interview questions that are perfect for the STAR method. Return only the questions as a simple JSON array of strings."
+              content: "Generate 5 behavioral interview questions that are ideal for the STAR method. \
+                        Each question should be a single concise sentence, without additional sub-questions or guidance. \
+                        Return only the questions as a simple JSON array of strings."
             }
           ],
           response_format: { type: "json_object" }
