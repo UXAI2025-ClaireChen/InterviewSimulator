@@ -3,19 +3,25 @@ import {
   Box,
   Button,
   Container,
-  Divider,
   Flex,
   Heading,
   Text,
   VStack,
   HStack,
-  Progress,
   useToast,
   Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  SimpleGrid,
+  Textarea,
+  Switch,
+  FormControl,
+  FormLabel,
+  Select,
+  IconButton,
+  Circle,
+  useColorModeValue,
+  Progress,
+  CircularProgress,
+  CircularProgressLabel,
+  Badge,
   Stat,
   StatLabel,
   StatNumber,
@@ -23,55 +29,145 @@ import {
   List,
   ListItem,
   ListIcon,
-  CircularProgress,
-  CircularProgressLabel,
-  Badge,
-  useColorModeValue,
-  Textarea,
-  Switch,
-  FormControl,
-  FormLabel
+  SimpleGrid,
+  Divider
 } from '@chakra-ui/react';
-import { CheckCircleIcon, InfoIcon } from '@chakra-ui/icons';
+import { RepeatIcon, CheckCircleIcon } from '@chakra-ui/icons';
 
 const InterviewSimulator = () => {
+  // State variables
   const [isRecording, setIsRecording] = useState(false);
   const [recordedText, setRecordedText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState('');
-  const [apiQuestions, setApiQuestions] = useState([]);
-  // Track which questions have been used
-  const [usedQuestionIndices, setUsedQuestionIndices] = useState([]);
-  // Track if questions are loading
+  const [apiQuestions, setApiQuestions] = useState({});
+  const [usedQuestionIndices, setUsedQuestionIndices] = useState({});
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
-  // Text input mode states
   const [isTextInputMode, setIsTextInputMode] = useState(false);
   const [textInputValue, setTextInputValue] = useState('');
+  const [selectedTopic, setSelectedTopic] = useState('Teamwork');
+  const [avatarIndex, setAvatarIndex] = useState(0);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [isPlayback, setIsPlayback] = useState(false);
   
+  // Refs
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const recordingTimerRef = useRef(null);
+  const audioRef = useRef(new Audio());
   const toast = useToast();
 
-  // Colors - defined outside of conditionals
+  // Colors
   const cardBg = useColorModeValue('white', 'gray.700');
-  const headerBg = useColorModeValue('blue.50', 'blue.900');
+  const questionBubbleBg = useColorModeValue('gray.100', 'gray.600');
   const primaryColor = useColorModeValue('blue.500', 'blue.300');
+  const buttonBg = useColorModeValue('gray.500', 'gray.600');
   const feedbackHeaderBg = useColorModeValue('purple.50', 'purple.900');
   const overallBg = useColorModeValue('gray.50', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
-
-  // Default sample interview questions (fallback if API fails)
-  const defaultQuestions = [
-    'Describe a challenging situation you faced at work and how you successfully resolved it.',
-    'Tell me about a project you led and how you ensured its successful completion.',
-    'Share a time when you had to make a decision under pressure and how you handled it.',
-    'Tell me about a time when you had to deal with conflict within your team.',
-    'Describe a goal you set for yourself and how you achieved it.'
+  
+  // Avatar images (in a real app, you would import these)
+  const avatars = Array.from({ length: 24 }, (_, i) => 
+    `/Avatars/Asset ${i + 8}.png`
+  );
+  
+  // Topics
+  const topics = [
+    'Teamwork',
+    'Communication',
+    'Leadership',
+    'Problem-solving',
+    'Time Management',
+    'Conflict Resolution',
+    'Adaptability',
+    'Customer Service',
+    'Initiative'
   ];
+  
+  // Default questions by topic (fallback if API fails)
+  const defaultQuestions = {
+    'Teamwork': [
+      'Tell me about a time when you had to deal with conflict within your team.',
+      'Describe a situation where you had to collaborate with a difficult team member.',
+      'Share an example of how you\'ve contributed to a team success.',
+      'Tell me about a time when you had to step up to help your team meet a deadline.',
+      'Describe how you\'ve successfully worked with diverse team members with different working styles.'
+    ],
+    'Communication': [
+      'Tell me about a time when you had to explain a complex concept to someone.',
+      'Describe a situation where your communication skills helped resolve a problem.',
+      'Share an example of how you\'ve effectively communicated in a challenging situation.',
+      'Tell me about a time when you had to deliver difficult news to a colleague or client.',
+      'Describe how you\'ve tailored your communication style for different audiences.'
+    ],
+    'Leadership': [
+      'Tell me about a time when you demonstrated leadership skills without having a formal title.',
+      'Describe a situation where you had to motivate a team through a difficult period.',
+      'Share an example of how you\'ve developed or mentored someone.',
+      'Tell me about a time when you had to make an unpopular decision as a leader.',
+      'Describe how you\'ve delegated responsibilities effectively.'
+    ],
+    'Problem-solving': [
+      'Tell me about a time when you had to solve a complex problem.',
+      'Describe a situation where you had to think creatively to overcome an obstacle.',
+      'Share an example of how you\'ve used data or analytics to solve a problem.',
+      'Tell me about a time when you anticipated a problem before it occurred.',
+      'Describe how you\'ve implemented a solution that improved a process or outcome.'
+    ],
+    'Time Management': [
+      'Tell me about a time when you had to manage multiple priorities.',
+      'Describe a situation where you had to meet a tight deadline.',
+      'Share an example of how you organize your work to maximize productivity.',
+      'Tell me about a time when you had to delegate tasks to meet deadlines.',
+      'Describe how you\'ve improved a process to save time.'
+    ],
+    'Conflict Resolution': [
+      'Tell me about a time when you had to address a conflict between team members.',
+      'Describe a situation where you successfully resolved a disagreement with a colleague.',
+      'Share an example of how you\'ve turned a negative interaction into a positive outcome.',
+      'Tell me about a time when you had to find a compromise between different stakeholders.',
+      'Describe how you\'ve maintained professional relationships after a conflict.'
+    ],
+    'Adaptability': [
+      'Tell me about a time when you had to quickly adapt to a significant change.',
+      'Describe a situation where you had to learn a new skill or technology quickly.',
+      'Share an example of how you\'ve successfully worked in an ambiguous environment.',
+      'Tell me about a time when your initial approach didn\'t work and you had to change course.',
+      'Describe how you\'ve remained effective during organizational changes.'
+    ],
+    'Customer Service': [
+      'Tell me about a time when you had to deal with a difficult customer.',
+      'Describe a situation where you went above and beyond for a customer.',
+      'Share an example of how you\'ve turned an unhappy customer into a satisfied one.',
+      'Tell me about a time when you had to say no to a customer request.',
+      'Describe how you\'ve improved a customer-facing process.'
+    ],
+    'Initiative': [
+      'Tell me about a time when you identified an opportunity that others missed.',
+      'Describe a situation where you took on responsibilities outside your job description.',
+      'Share an example of how you\'ve implemented a new idea or process.',
+      'Tell me about a time when you proactively solved a problem before being asked.',
+      'Describe how you\'ve pursued professional development on your own initiative.'
+    ]
+  };
 
-  // Function to fetch interview questions from OpenAI API
-  const fetchInterviewQuestions = async () => {
+  // Function to format time in MM:SS format
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const secs = (seconds % 60).toString().padStart(2, '0');
+    return `${mins}:${secs}`;
+  };
+
+  // Function to randomize the avatar
+  const randomizeAvatar = () => {
+    const newIndex = Math.floor(Math.random() * avatars.length);
+    setAvatarIndex(newIndex);
+  };
+
+  // Function to fetch interview questions from OpenAI API for a specific topic
+  // Update fetchInterviewQuestions function to select a question after successful fetch
+  const fetchInterviewQuestions = async (topic) => {
     setIsLoadingQuestions(true);
     try {
       // Make a real API call to OpenAI
@@ -86,17 +182,13 @@ const InterviewSimulator = () => {
           messages: [
             {
               role: "system",
-              content: "You are an expert interviewer. Generate behavioral interview questions for the STAR method (Situation, Task, Action, Result)."
+              content: `You are an expert interviewer. Generate behavioral interview questions for the STAR method (Situation, Task, Action, Result) related to the topic: ${topic}.`
             },
-            // {
-            //   role: "user", 
-            //   content: "Generate 5 different behavioral interview questions that are perfect for the STAR method. Return only the questions as a simple JSON array of strings."
-            // }
             {
               role: "user", 
-              content: "Generate 5 behavioral interview questions that are ideal for the STAR method. \
+              content: `Generate 5 behavioral interview questions for the topic "${topic}" that are ideal for the STAR method. \
                         Each question should be a single concise sentence, without additional sub-questions or guidance. \
-                        Return only the questions as a simple JSON array of strings."
+                        Return only the questions as a simple JSON array of strings.`
             }
           ],
           response_format: { type: "json_object" }
@@ -169,22 +261,59 @@ const InterviewSimulator = () => {
         throw new Error('Failed to parse API response');
       }
       
-      setApiQuestions(parsedQuestions);
-      // Reset used question indices when new questions are fetched
-      setUsedQuestionIndices([]);
+      // After success, update questions and reset used indices
+      setApiQuestions(prev => ({
+        ...prev,
+        [topic]: parsedQuestions
+      }));
+      
+      // Reset used question indices for this topic
+      setUsedQuestionIndices(prev => ({
+        ...prev,
+        [topic]: []
+      }));
       
       toast({
         title: 'Questions loaded',
-        description: 'New interview questions are ready',
+        description: `New ${topic} questions are ready`,
         status: 'success',
         duration: 2000,
         isClosable: true,
       });
+      
+      // After getting new questions, automatically select one
+      setTimeout(() => {
+        const questions = parsedQuestions.length > 0 ? parsedQuestions : defaultQuestions[topic] || [];
+        if (questions.length > 0) {
+          const randomIndex = Math.floor(Math.random() * questions.length);
+          setCurrentQuestion(questions[randomIndex]);
+          
+          // Mark this question as used
+          setUsedQuestionIndices(prev => ({
+            ...prev,
+            [topic]: [randomIndex]
+          }));
+          
+          // Reset interview state
+          resetInterview();
+          
+          // Randomly change avatar
+          // randomizeAvatar();
+        }
+      }, 100); // Short delay to ensure state has updated
+      
     } catch (error) {
-      console.error('Error fetching interview questions:', error);
+      console.error(`Error fetching ${topic} interview questions:`, error);
       // Fallback to default questions if API fails
-      setApiQuestions(defaultQuestions);
-      setUsedQuestionIndices([]);
+      setApiQuestions(prev => ({
+        ...prev,
+        [topic]: defaultQuestions[topic] || []
+      }));
+      
+      setUsedQuestionIndices(prev => ({
+        ...prev,
+        [topic]: []
+      }));
       
       toast({
         title: 'Error loading questions',
@@ -193,20 +322,51 @@ const InterviewSimulator = () => {
         duration: 3000,
         isClosable: true,
       });
+      
+      // Select a default question when API fails
+      setTimeout(() => {
+        if (defaultQuestions[topic] && defaultQuestions[topic].length > 0) {
+          const randomIndex = Math.floor(Math.random() * defaultQuestions[topic].length);
+          setCurrentQuestion(defaultQuestions[topic][randomIndex]);
+          
+          // Mark this question as used
+          setUsedQuestionIndices(prev => ({
+            ...prev,
+            [topic]: [randomIndex]
+          }));
+          
+          // Reset interview state
+          resetInterview();
+          
+          // Randomly change avatar
+          // randomizeAvatar();
+        }
+      }, 100);
     } finally {
       setIsLoadingQuestions(false);
     }
   };
 
-  // Select a random question
+  // Get questions for the current topic
+  const getTopicQuestions = () => {
+    // If we have API questions for this topic, use those
+    if (apiQuestions[selectedTopic] && apiQuestions[selectedTopic].length > 0) {
+      return apiQuestions[selectedTopic];
+    }
+    
+    // Otherwise use default questions
+    return defaultQuestions[selectedTopic] || [];
+  };
+
+  // Select a random question from the current topic
   const selectRandomQuestion = () => {
-    const questions = apiQuestions.length > 0 ? apiQuestions : defaultQuestions;
+    const questions = getTopicQuestions();
     
     // Check if all questions have been used
-    if (usedQuestionIndices.length >= questions.length) {
-      // Fetch new questions if all current ones have been used
-      // Silently fetch new questions without notifying the user
-      fetchInterviewQuestions();
+    const usedIndices = usedQuestionIndices[selectedTopic] || [];
+    if (usedIndices.length >= questions.length) {
+      // If all questions have been used, fetch new questions
+      fetchInterviewQuestions(selectedTopic);
       return;
     }
     
@@ -214,12 +374,33 @@ const InterviewSimulator = () => {
     let randomIndex;
     do {
       randomIndex = Math.floor(Math.random() * questions.length);
-    } while (usedQuestionIndices.includes(randomIndex));
+    } while (usedIndices.includes(randomIndex) && usedIndices.length < questions.length);
     
     // Mark this question as used
-    setUsedQuestionIndices(prev => [...prev, randomIndex]);
+    setUsedQuestionIndices(prev => ({
+      ...prev,
+      [selectedTopic]: [...(prev[selectedTopic] || []), randomIndex]
+    }));
+    
     setCurrentQuestion(questions[randomIndex]);
     resetInterview();
+  };
+
+  // Handle topic change
+  const handleTopicChange = (e) => {
+    const newTopic = e.target.value;
+    setSelectedTopic(newTopic);
+    
+    // Check if we already have questions for this topic
+    if (!apiQuestions[newTopic] || apiQuestions[newTopic].length === 0) {
+      // Fetch questions for this topic if we don't have them yet
+      fetchInterviewQuestions(newTopic);
+    } else {
+      // If we already have questions, just select a random one
+      setTimeout(() => {
+        selectRandomQuestion();
+      }, 10);
+    }
   };
 
   // Start recording
@@ -235,17 +416,29 @@ const InterviewSimulator = () => {
 
       mediaRecorderRef.current.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        
+        // Create a URL for the audio blob for playback
+        const audioUrl = URL.createObjectURL(audioBlob);
+        audioRef.current.src = audioUrl;
+        
         // Send the audio to OpenAI Whisper API for transcription
         convertSpeechToText(audioBlob);
       };
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
+      
+      // Start the recording timer
+      setRecordingTime(0);
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
       toast({
         title: 'Recording started',
         description: 'Speak clearly for better transcription',
         status: 'info',
-        duration: 3000,
+        duration: 2000,
         isClosable: true,
       });
     } catch (error) {
@@ -254,7 +447,7 @@ const InterviewSimulator = () => {
         title: 'Microphone error',
         description: 'Could not access your microphone',
         status: 'error',
-        duration: 5000,
+        duration: 3000,
         isClosable: true,
       });
     }
@@ -265,13 +458,29 @@ const InterviewSimulator = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      
+      // Stop the recording timer
+      clearInterval(recordingTimerRef.current);
+      
       toast({
         title: 'Recording completed',
         description: 'Processing your answer',
         status: 'success',
-        duration: 3000,
+        duration: 2000,
         isClosable: true,
       });
+    }
+  };
+
+  // Toggle playback
+  const togglePlayback = () => {
+    if (audioRef.current) {
+      if (isPlayback) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlayback(!isPlayback);
     }
   };
 
@@ -302,7 +511,7 @@ const InterviewSimulator = () => {
       const transcribedText = data.text;
       
       setRecordedText(transcribedText);
-      analyzeResponse(transcribedText);
+      // Don't automatically analyze yet, wait for user to submit
     } catch (error) {
       console.error('Error transcribing audio:', error);
       setRecordedText("Error transcribing audio. Please try again.");
@@ -318,13 +527,14 @@ const InterviewSimulator = () => {
 
   // Handle text input submission
   const handleTextInputSubmit = () => {
-    if (textInputValue.trim()) {
-      setRecordedText(textInputValue);
-      analyzeResponse(textInputValue);
+    const textToAnalyze = isTextInputMode ? textInputValue : recordedText;
+    
+    if (textToAnalyze && textToAnalyze !== "Transcribing your answer...") {
+      analyzeResponse(textToAnalyze);
       
       toast({
         title: 'Answer submitted',
-        description: 'Processing your text input',
+        description: 'Processing your answer',
         status: 'success',
         duration: 2000,
         isClosable: true,
@@ -429,334 +639,395 @@ const InterviewSimulator = () => {
     setRecordedText('');
     setFeedback(null);
     setTextInputValue('');
-  };
-
-  // Generate a sample answer for the current question
-  const generateSampleAnswer = () => {
-    const sampleAnswers = {
-      challenging: "In my previous role as a project manager, I faced a significant challenge when our main client requested a 30% reduction in timeline while maintaining the same scope. I first analyzed the project plan to identify areas where we could optimize without compromising quality. Then, I organized a team meeting to discuss the situation and brainstorm solutions. I divided the team into specialized sub-groups working in parallel rather than sequentially and implemented daily stand-ups to quickly address any blockers. I also negotiated with the client to prioritize features for a phased delivery approach. As a result, we delivered the core functionality within the shortened timeline and completed the remaining features in a second release two weeks later. The client was extremely satisfied, which led to a 20% larger contract the following quarter.",
-      project: "I led a cross-functional team of 12 people to implement a new inventory management system across our organization. My responsibility was to coordinate between IT, warehouse operations, finance, and external vendors. I started by creating a detailed project plan with clear milestones and established a RACI matrix to clarify roles and responsibilities. To manage stakeholder expectations, I set up a communication schedule with regular updates and created a risk register that we reviewed weekly. When we encountered integration issues with legacy systems, I prioritized allocating additional developer resources to address these problems. I also organized hands-on training sessions for end-users, resulting in higher adoption rates. The project was completed on time and 5% under budget, and improved inventory accuracy from 82% to 97%, reducing annual costs by approximately $300,000.",
-      pressure: "During the final phase of our product launch, we discovered a critical bug just 48 hours before release. As the lead developer, I quickly assembled a war room with our top engineers. I first assessed the severity of the issue and determined it would affect about 25% of user transactions. Then, I developed a triage plan dividing our team into three groups: one to develop a fix, one to test across different scenarios, and one to prepare documentation and communication in case we needed to delay. After identifying the root cause, I personally wrote the patch while guiding the testing team on validation scenarios. We worked through the night and successfully deployed the fix with just 4 hours to spare. Despite the pressure, we ensured thorough testing and documentation. The launch proceeded without any issues, and the executive team commended our quick response that avoided a potential $1.5M revenue impact.",
-      conflict: "In my role as a team leader, I experienced a conflict between two senior colleagues who disagreed on the architectural approach for a key project. One advocated for a microservices architecture while the other insisted on a monolithic approach, creating tension that affected the entire team. I first met with each person individually to understand their perspectives and concerns, making sure they felt heard. Then, I organized a structured meeting where I asked them to present their approaches with specific pros and cons related to our business requirements rather than personal preferences. I guided the discussion toward our shared objectives: system performance, maintenance requirements, and development speed. Through this facilitated discussion, we reached a hybrid solution that incorporated elements from both approaches. I created a document outlining the agreed architecture and both team members felt their input was valued. The result was a successful project delivery, improved team dynamics, and a template for resolving technical disagreements that we now use across the department.",
-      goal: "I set a goal for myself to improve our department's customer satisfaction score from 75% to 90% within six months. First, I conducted a detailed analysis of customer feedback to identify the main pain points, finding that response time and resolution quality were the biggest issues. I developed a three-part strategy: streamlining our ticketing workflow, implementing a new training program focused on technical knowledge and communication skills, and creating performance metrics that emphasized quality over quantity. I scheduled regular check-ins with my team to track progress and make adjustments. When we hit a plateau at 82% after three months, I conducted follow-up interviews with customers and discovered additional issues with our knowledge base. I then led an initiative to completely revamp our documentation. By the end of the six-month period, we had exceeded our goal, reaching 92% satisfaction. This improvement resulted in a 15% increase in customer retention and was recognized by senior management as a best practice for other departments."
-    };
-
-    // Determine which sample answer to use based on the current question
-    let sampleAnswer = "";
-    const questionLower = currentQuestion.toLowerCase();
+    setRecordingTime(0);
+    setIsPlayback(false);
     
-    if (questionLower.includes("challenge") || questionLower.includes("difficult")) {
-      sampleAnswer = sampleAnswers.challenging;
-    } else if (questionLower.includes("project") || questionLower.includes("led")) {
-      sampleAnswer = sampleAnswers.project;
-    } else if (questionLower.includes("pressure") || questionLower.includes("decision")) {
-      sampleAnswer = sampleAnswers.pressure;
-    } else if (questionLower.includes("conflict")) {
-      sampleAnswer = sampleAnswers.conflict;
-    } else if (questionLower.includes("goal")) {
-      sampleAnswer = sampleAnswers.goal;
-    } else {
-      // Default to the challenging scenario if no specific match
-      sampleAnswer = sampleAnswers.challenging;
+    // Clear audio playback
+    if (audioRef.current) {
+      audioRef.current.src = '';
     }
-    
-    setTextInputValue(sampleAnswer);
   };
-
-  // Fetch questions and load a question on initial render
-  useEffect(() => {
-    fetchInterviewQuestions();
-  }, []);
-  
-  // Select a random question when API questions are loaded or on initial render
-  useEffect(() => {
-    if (apiQuestions.length > 0 && !currentQuestion && !isLoadingQuestions) {
-      selectRandomQuestion();
-    } else if (!currentQuestion && !isLoadingQuestions) {
-      // Fallback to default if API hasn't loaded yet
-      const randomIndex = Math.floor(Math.random() * defaultQuestions.length);
-      setCurrentQuestion(defaultQuestions[randomIndex]);
-      // Track this question as used
-      setUsedQuestionIndices([randomIndex]);
-    }
-  }, [apiQuestions, currentQuestion, isLoadingQuestions]);
 
   // Helper function to get color based on score
   const getScoreColor = (score) => {
     return score > 80 ? "green.500" : score > 60 ? "orange.500" : "red.500";
   };
-  
+
+  // Load questions for the initial topic on component mount
+  useEffect(() => {
+    fetchInterviewQuestions(selectedTopic);
+  }, []);
+
+  // Select a random question when API questions are loaded
+  useEffect(() => {
+    if (apiQuestions[selectedTopic] && apiQuestions[selectedTopic].length > 0 && !currentQuestion && !isLoadingQuestions) {
+      selectRandomQuestion();
+    } else if (!currentQuestion && !isLoadingQuestions && defaultQuestions[selectedTopic]) {
+      // Fallback to default if API hasn't loaded yet
+      const randomIndex = Math.floor(Math.random() * defaultQuestions[selectedTopic].length);
+      setCurrentQuestion(defaultQuestions[selectedTopic][randomIndex]);
+      
+      // Track this question as used
+      setUsedQuestionIndices(prev => ({
+        ...prev,
+        [selectedTopic]: [randomIndex]
+      }));
+    }
+  }, [apiQuestions, selectedTopic, currentQuestion, isLoadingQuestions]);
+
+  // Set up audio events
+  useEffect(() => {
+    const audio = audioRef.current;
+    
+    const handleAudioEnd = () => {
+      setIsPlayback(false);
+    };
+    
+    audio.addEventListener('ended', handleAudioEnd);
+    
+    return () => {
+      audio.removeEventListener('ended', handleAudioEnd);
+      clearInterval(recordingTimerRef.current);
+    };
+  }, []);
+
   return (
     <Container maxW="5xl" py={8}>
       <VStack spacing={6} align="stretch">
         {/* Header */}
-        <Box textAlign="center" py={6} px={4} bg={headerBg} borderRadius="lg">
-          <Heading as="h1" size="lg" fontWeight="semibold" mb={2} color={primaryColor}>
+        <Box textAlign="center" py={6}>
+          <Heading as="h1" size="xl" fontWeight="semibold" mb={2}>
             Behavior Question Training Platform
           </Heading>
-          {/* <Text>Powered by OpenAI APIs for questions, speech-to-text, and analysis</Text> */}
         </Box>
         
-        {/* Interview question card */}
-        <Card bg={cardBg} shadow="md" borderRadius="lg">
-          <CardHeader pb={0}>
-            <Heading size="md">Interview Question:</Heading>
-          </CardHeader>
-          <CardBody>
-            <Text fontSize="lg" fontWeight="medium" mb={4}>
-              {currentQuestion}
-            </Text>
-          </CardBody>
-          <CardFooter pt={0}>
-            <Flex justify="space-between" width="100%">
-              <Button 
-                leftIcon={<InfoIcon />}
-                onClick={selectRandomQuestion}
-                colorScheme="blue" 
-                variant="outline"
-                isDisabled={isLoadingQuestions}
-              >
-                New Question
-              </Button>
-              
-              <HStack>
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel htmlFor="text-mode-toggle" mb="0" mr={2} fontSize="sm">
-                    Text Mode
-                  </FormLabel>
-                  <Switch 
-                    id="text-mode-toggle" 
-                    colorScheme="teal"
-                    isChecked={isTextInputMode}
-                    onChange={() => setIsTextInputMode(!isTextInputMode)}
-                  />
-                </FormControl>
-                
-                {!isTextInputMode ? (
-                  !isRecording ? (
-                    <Button 
-                      onClick={startRecording}
-                      colorScheme="green"
-                      rightIcon={<span style={{ fontSize: '0.8em' }}>🎙️</span>}
-                      isDisabled={isLoadingQuestions}
-                      px={6} // Increase horizontal padding
-                      minW="180px" // Set minimum width
-                      height="auto" // Allow button height to adapt to content
-                      whiteSpace="normal" // Allow text to wrap
-                      py={3} // Ensure sufficient vertical padding
-                    >
-                      Start Answer (Record)
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={stopRecording}
-                      colorScheme="red"
-                      rightIcon={<span style={{ fontSize: '0.8em' }}>⏹️</span>}
-                      px={6} // Increase horizontal padding
-                      minW="180px" // Set minimum width
-                      height="auto" // Allow button height to adapt to content
-                      whiteSpace="normal" // Allow text to wrap
-                      py={3} // Ensure sufficient vertical padding
-                    >
-                      Finish Answer (Stop)
-                    </Button>
-                  )
-                ) : null}
-              </HStack>
-            </Flex>
-          </CardFooter>
-        </Card>
+        {/* Topic selector */}
+        <Flex mb={4} alignItems="center">
+          <Text fontWeight="medium" mr={3}>Topics</Text>
+          <Select 
+            value={selectedTopic}
+            onChange={handleTopicChange}
+            maxW="250px"
+            borderRadius="md"
+            isDisabled={isLoadingQuestions}
+          >
+            {topics.map(topic => (
+              <option key={topic} value={topic}>{topic}</option>
+            ))}
+          </Select>
+        </Flex>
         
-        {/* Text input mode */}
-        {isTextInputMode && (
-          <Card bg={cardBg} shadow="md" borderRadius="lg">
-            <CardHeader pb={0}>
-              <Flex justify="space-between" align="center">
-                <Heading size="md">Your Answer (Text Input):</Heading>
-                <Button 
-                  size="sm" 
-                  colorScheme="teal" 
-                  variant="outline"
-                  onClick={generateSampleAnswer}
-                >
-                  Generate Sample Answer
-                </Button>
+        {/* Question and avatar section */}
+        <Flex alignItems="flex-start" mb={4}>
+          <IconButton
+            icon={<RepeatIcon />}
+            aria-label="Shuffle avatar"
+            size="sm"
+            mr={2}
+            onClick={randomizeAvatar}
+            isDisabled={isLoadingQuestions}
+          />
+          
+          <Box 
+            as="img"
+            src={avatars[avatarIndex] || "/avatar1.png"} 
+            alt="Interviewer avatar"
+            boxSize="80px"
+            mr={4}
+          />
+          
+          <Box 
+            position="relative"
+            bg={questionBubbleBg}
+            p={4}
+            borderRadius="lg"
+            maxW="80%"
+            flex="1"
+          >
+            {isLoadingQuestions ? (
+              <Flex direction="column" align="center" py={2}>
+                <CircularProgress isIndeterminate color="blue.500" size="40px" mb={2} />
+                <Text fontSize="sm">Loading questions...</Text>
               </Flex>
-            </CardHeader>
-            <CardBody>
-              <Textarea
-                value={textInputValue}
-                onChange={(e) => setTextInputValue(e.target.value)}
-                placeholder="Type your answer here..."
-                size="md"
-                rows={8}
-                mb={4}
-              />
-              <Button
-                onClick={handleTextInputSubmit}
-                colorScheme="green"
-                isDisabled={!textInputValue.trim()}
-                width="full"
+            ) : (
+              <Text fontSize="md" fontWeight="medium">
+                {currentQuestion}
+              </Text>
+            )}
+            
+            <Button
+              position="absolute"
+              right={4}
+              bottom={4}
+              size="sm"
+              colorScheme="orange"
+              variant="link"
+              onClick={selectRandomQuestion}
+              isDisabled={isLoadingQuestions}
+            >
+              Skip this
+            </Button>
+          </Box>
+        </Flex>
+        
+        {/* Answer section */}
+        <Card bg={cardBg} shadow="sm" borderRadius="lg" p={6}>
+          <Flex direction="column" width="100%">
+            {/* Text mode toggle */}
+            <Flex justifyContent="space-between" alignItems="center" mb={4}>
+              <Text fontWeight="medium">My Answer:</Text>
+              
+              <FormControl display="flex" alignItems="center" width="auto">
+                <FormLabel htmlFor="text-mode-toggle" mb="0" mr={2} fontSize="sm">
+                  Text Mode
+                </FormLabel>
+                <Switch 
+                  id="text-mode-toggle" 
+                  colorScheme="teal"
+                  isChecked={isTextInputMode}
+                  onChange={() => setIsTextInputMode(!isTextInputMode)}
+                />
+              </FormControl>
+            </Flex>
+            
+            {/* Text input mode */}
+{isTextInputMode ? (
+  <Box mb={4}>
+    <Textarea
+      value={textInputValue}
+      onChange={(e) => setTextInputValue(e.target.value)}
+      placeholder="Type your answer here..."
+      size="md"
+      rows={8}
+      mb={4}
+      borderRadius="md"
+    />
+    <Button
+      onClick={handleTextInputSubmit}
+      colorScheme="blue"
+      width="full"
+      borderRadius="md"
+      isDisabled={!textInputValue.trim() || isAnalyzing}
+    >
+      Submit Answer
+    </Button>
+  </Box>
+) : (
+  <Box>
+    {/* Show correct recording interface based on state */}
+    {!recordedText ? (
+      !isRecording ? (
+        <Flex justifyContent="center" alignItems="center" py={10}>
+          <Circle 
+            size="100px" 
+            bg={buttonBg} 
+            cursor="pointer" 
+            onClick={startRecording}
+          >
+            <Box as="span" fontSize="3xl" color="white">🎙️</Box>
+          </Circle>
+        </Flex>
+      ) : (
+        <Flex direction="column" alignItems="center" py={6}>
+          <Text fontSize="xl" fontWeight="bold" mb={4}>
+            {formatTime(recordingTime)}
+          </Text>
+          <Circle 
+            size="100px" 
+            bg="red.500" 
+            cursor="pointer" 
+            onClick={stopRecording}
+          >
+            <Box as="span" fontSize="xl" color="white">■</Box>
+          </Circle>
+        </Flex>
+      )
+    ) : recordedText === "Transcribing your answer..." ? (
+      <Flex direction="column" alignItems="center" py={6}>
+        <CircularProgress isIndeterminate color="blue.500" size="60px" mb={3} />
+        <Text>Converting your speech to text...</Text>
+      </Flex>
+    ) : (
+      <Box>
+        {/* Show playback controls if there's a recording */}
+        <Flex direction="column" alignItems="center" mb={4}>
+          <Text fontSize="xl" fontWeight="bold" mb={2}>
+            {formatTime(recordingTime)}
+          </Text>
+          <Circle 
+            size="100px" 
+            bg={buttonBg} 
+            cursor="pointer" 
+            onClick={togglePlayback}
+            mb={4}
+          >
+            <Box as="span" fontSize="2xl" color="white">
+              {isPlayback ? '■' : '▶️'}
+            </Box>
+          </Circle>
+        </Flex>
+        
+        {/* Action buttons */}
+        <Flex justifyContent="space-between" mt={4}>
+          <Button
+            onClick={handleTextInputSubmit}
+            colorScheme="blue"
+            flex="1"
+            mr={2}
+            borderRadius="md"
+            isDisabled={isAnalyzing}
+          >
+            Submit Answer
+          </Button>
+          <Button
+            onClick={resetInterview}
+            variant="outline"
+            flex="1"
+            ml={2}
+            borderRadius="md"
+          >
+            Try Again
+          </Button>
+        </Flex>
+        
+        {/* Recorded text */}
+        {recordedText && (
+          <Box mt={6} borderTopWidth="1px" pt={4}>
+            <Text fontWeight="medium" mb={2}>Your Answer:</Text>
+            <Text whiteSpace="pre-line">{recordedText}</Text>
+          </Box>
+        )}
+      </Box>
+    )}
+  </Box>
+)}
+
+{/* Show analyzing status */}
+{isAnalyzing && (
+  <Box textAlign="center" py={4} mt={4}>
+    <CircularProgress isIndeterminate color="purple.500" size="50px" />
+    <Text mt={3} fontWeight="medium">AI is analyzing your response...</Text>
+  </Box>
+)}
+
+{/* Display AI feedback and suggestions */}
+{feedback && (
+  <Card bg={cardBg} shadow="md" borderRadius="lg" mt={6}>
+    <Box bg={feedbackHeaderBg} p={4} borderTopRadius="lg">
+      <Heading size="md">AI Feedback & Suggestions</Heading>
+    </Box>
+    <Box p={5}>
+      <VStack spacing={6} align="stretch">
+        {/* Overall score */}
+        <Flex align="center" p={4} bg={overallBg} borderRadius="md">
+          <CircularProgress 
+            value={feedback.overallScore} 
+            color={getScoreColor(feedback.overallScore)} 
+            size="100px"
+            thickness="8px"
+            mr={6}
+          >
+            <CircularProgressLabel fontWeight="bold" fontSize="xl">
+              {feedback.overallScore}
+            </CircularProgressLabel>
+          </CircularProgress>
+          <Box flex="1">
+            <Heading size="sm" mb={2}>Overall Assessment</Heading>
+            <Text>{feedback.generalFeedback}</Text>
+          </Box>
+        </Flex>
+        
+        {/* STAR evaluation */}
+        <Box>
+          <Heading size="sm" mb={4}>STAR Components Evaluation</Heading>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            {Object.entries(feedback.categories || {}).map(([key, value]) => (
+              <Box 
+                key={key} 
+                p={4} 
+                borderWidth="1px" 
+                borderRadius="md" 
+                borderColor={borderColor}
               >
-                Submit Answer
-              </Button>
-            </CardBody>
-          </Card>
-        )}
+                <Stat>
+                  <Flex justify="space-between" align="center">
+                    <StatLabel textTransform="capitalize" fontSize="md">{key}</StatLabel>
+                    <StatNumber
+                      fontSize="xl"
+                      color={getScoreColor(value.score)}
+                    >
+                      {value.score}
+                    </StatNumber>
+                  </Flex>
+                  <StatHelpText>{value.feedback}</StatHelpText>
+                </Stat>
+              </Box>
+            ))}
+          </SimpleGrid>
+        </Box>
         
-        {/* Recording status */}
-        {isRecording && (
-          <Box textAlign="center" py={3}>
-            <Badge colorScheme="red" fontSize="lg" p={2} borderRadius="md" animation="pulse 1.5s infinite">
-              Recording in progress... (Speak clearly for better Whisper API transcription)
-            </Badge>
-          </Box>
-        )}
+        {/* Additional metrics */}
+        <Box>
+          <Heading size="sm" mb={4}>Additional Metrics</Heading>
+          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+            {Object.entries(feedback.additionalMetrics || {}).map(([key, value]) => (
+              <Box 
+                key={key} 
+                p={3} 
+                borderWidth="1px" 
+                borderRadius="md" 
+                borderColor={borderColor}
+              >
+                <Stat size="sm">
+                  <Flex justify="space-between" align="center">
+                    <StatLabel textTransform="capitalize">{key}</StatLabel>
+                    <StatNumber
+                      fontSize="lg"
+                      color={getScoreColor(value.score)}
+                    >
+                      {value.score}
+                    </StatNumber>
+                  </Flex>
+                  <StatHelpText fontSize="sm">{value.feedback}</StatHelpText>
+                </Stat>
+              </Box>
+            ))}
+          </SimpleGrid>
+        </Box>
         
-        {/* Processing indicators */}
-        {recordedText === "Transcribing your answer..." && (
-          <Box textAlign="center" py={4}>
-            <CircularProgress isIndeterminate color="blue.500" size="50px" />
-            <Text mt={3} fontWeight="medium">Converting your speech to text...</Text>
-          </Box>
-        )}
+        {/* Improvement suggestions */}
+        <Box>
+          <Heading size="sm" mb={3}>Improvement Suggestions</Heading>
+          <List spacing={2}>
+            {(feedback.improvementSuggestions || []).map((suggestion, index) => (
+              <ListItem key={index} display="flex">
+                <ListIcon as={CheckCircleIcon} color="green.500" mt={1} />
+                <Text>{suggestion}</Text>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
         
-        {/* Display transcribed text */}
-        {recordedText && recordedText !== "Transcribing your answer..." && (
-          <Card bg={cardBg} shadow="md" borderRadius="lg">
-            <CardHeader>
-              <Heading size="md">Your Answer:</Heading>
-            </CardHeader>
-            <CardBody>
-              <Text whiteSpace="pre-line">{recordedText}</Text>
-            </CardBody>
-          </Card>
-        )}
-        
-        {/* Show analyzing status */}
-        {isAnalyzing && (
-          <Box textAlign="center" py={4}>
-            <CircularProgress isIndeterminate color="purple.500" size="50px" />
-            <Text mt={3} fontWeight="medium">AI is analyzing your response...</Text>
-          </Box>
-        )}
-        
-        {/* Display AI feedback and suggestions */}
-        {feedback && (
-          <Card bg={cardBg} shadow="md" borderRadius="lg">
-            <CardHeader bg={feedbackHeaderBg} borderTopRadius="lg">
-              <Heading size="md">AI Feedback & Suggestions</Heading>
-            </CardHeader>
-            <CardBody>
-              <VStack spacing={6} align="stretch">
-                {/* Overall score */}
-                <Flex align="center" p={4} bg={overallBg} borderRadius="md">
-                  <CircularProgress 
-                    value={feedback.overallScore} 
-                    color={feedback.overallScore > 80 ? "green.400" : feedback.overallScore > 60 ? "orange.400" : "red.400"} 
-                    size="100px"
-                    thickness="8px"
-                    mr={6}
-                  >
-                    <CircularProgressLabel fontWeight="bold" fontSize="xl">
-                      {feedback.overallScore}
-                    </CircularProgressLabel>
-                  </CircularProgress>
-                  <Box flex="1">
-                    <Heading size="sm" mb={2}>Overall Assessment</Heading>
-                    <Text>{feedback.generalFeedback}</Text>
-                  </Box>
-                </Flex>
-                
-                {/* STAR evaluation */}
-                <Box>
-                  <Heading size="sm" mb={4}>STAR Components Evaluation</Heading>
-                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                    {Object.entries(feedback.categories).map(([key, value]) => (
-                      <Box 
-                        key={key} 
-                        p={4} 
-                        borderWidth="1px" 
-                        borderRadius="md" 
-                        borderColor={borderColor}
-                      >
-                        <Stat>
-                          <Flex justify="space-between" align="center">
-                            <StatLabel textTransform="capitalize" fontSize="md">{key}</StatLabel>
-                            <StatNumber
-                              fontSize="xl"
-                              color={getScoreColor(value.score)}
-                            >
-                              {value.score}
-                            </StatNumber>
-                          </Flex>
-                          <StatHelpText>{value.feedback}</StatHelpText>
-                        </Stat>
-                      </Box>
-                    ))}
-                  </SimpleGrid>
-                </Box>
-                
-                {/* Additional metrics */}
-                <Box>
-                  <Heading size="sm" mb={4}>Additional Metrics</Heading>
-                  <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
-                    {Object.entries(feedback.additionalMetrics).map(([key, value]) => (
-                      <Box 
-                        key={key} 
-                        p={3} 
-                        borderWidth="1px" 
-                        borderRadius="md" 
-                        borderColor={borderColor}
-                      >
-                        <Stat size="sm">
-                          <Flex justify="space-between" align="center">
-                            <StatLabel textTransform="capitalize">{key}</StatLabel>
-                            <StatNumber
-                              fontSize="lg"
-                              color={getScoreColor(value.score)}
-                            >
-                              {value.score}
-                            </StatNumber>
-                          </Flex>
-                          <StatHelpText fontSize="sm">{value.feedback}</StatHelpText>
-                        </Stat>
-                      </Box>
-                    ))}
-                  </SimpleGrid>
-                </Box>
-                
-                {/* Improvement suggestions */}
-                <Box>
-                  <Heading size="sm" mb={3}>Improvement Suggestions</Heading>
-                  <List spacing={2}>
-                    {feedback.improvementSuggestions.map((suggestion, index) => (
-                      <ListItem key={index} display="flex">
-                        <ListIcon as={CheckCircleIcon} color="green.500" mt={1} />
-                        <Text>{suggestion}</Text>
-                      </ListItem>
-                    ))}
-                  </List>
-                </Box>
-                
-                {/* Try again button */}
-                <Box textAlign="center" pt={4}>
-                  <Button 
-                    onClick={resetInterview}
-                    colorScheme="purple"
-                    size="lg"
-                    shadow="md"
-                  >
-                    Try Again
-                  </Button>
-                </Box>
-              </VStack>
-            </CardBody>
-          </Card>
-        )}
+        {/* Try again button */}
+        <Box textAlign="center" pt={4}>
+          <Button 
+            onClick={resetInterview}
+            colorScheme="purple"
+            size="lg"
+            shadow="md"
+          >
+            Try Again
+          </Button>
+        </Box>
       </VStack>
-    </Container>
-  );
+    </Box>
+  </Card>
+)}
+</Flex>
+</Card>
+</VStack>
+</Container>
+);
 };
 
 export default InterviewSimulator;
