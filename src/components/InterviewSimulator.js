@@ -491,8 +491,8 @@ const InterviewSimulator = () => {
       <VStack spacing={6} align="stretch">
         {/* Header */}
         <Box textAlign="center" py={6} px={4} bg={headerBg} borderRadius="lg">
-          <Heading as="h1" size="xl" mb={2} color={primaryColor}>
-            STAR Method Interview Simulator
+          <Heading as="h1" size="lg" fontWeight="semibold" mb={2} color={primaryColor}>
+            Behavior Question Training Platform
           </Heading>
           {/* <Text>Powered by OpenAI APIs for questions, speech-to-text, and analysis</Text> */}
         </Box>
@@ -507,54 +507,6 @@ const InterviewSimulator = () => {
               {currentQuestion}
             </Text>
           </CardBody>
-          {/* <CardFooter pt={0}>
-            <Flex justify="space-between" width="100%">
-              <Button 
-                leftIcon={<InfoIcon />}
-                onClick={selectRandomQuestion}
-                colorScheme="blue" 
-                variant="outline"
-                isDisabled={isLoadingQuestions}
-              >
-                New Question
-              </Button>
-              
-              <HStack>
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel htmlFor="text-mode-toggle" mb="0" mr={2} fontSize="sm">
-                    Text Mode
-                  </FormLabel>
-                  <Switch 
-                    id="text-mode-toggle" 
-                    colorScheme="teal"
-                    isChecked={isTextInputMode}
-                    onChange={() => setIsTextInputMode(!isTextInputMode)}
-                  />
-                </FormControl>
-                
-                {!isTextInputMode ? (
-                  !isRecording ? (
-                    <Button 
-                      onClick={startRecording}
-                      colorScheme="green"
-                      rightIcon={<span style={{ fontSize: '0.8em' }}>🎙️</span>}
-                      isDisabled={isLoadingQuestions}
-                    >
-                      Start Answer (Record)
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={stopRecording}
-                      colorScheme="red"
-                      rightIcon={<span style={{ fontSize: '0.8em' }}>⏹️</span>}
-                    >
-                      Finish Answer (Stop)
-                    </Button>
-                  )
-                ) : null}
-              </HStack>
-            </Flex>
-          </CardFooter> */}
           <CardFooter pt={0}>
             <Flex justify="space-between" width="100%">
               <Button 
