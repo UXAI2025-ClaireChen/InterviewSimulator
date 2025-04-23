@@ -30,9 +30,14 @@ import {
   ListItem,
   ListIcon,
   SimpleGrid,
-  Divider
+  Divider,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem
 } from '@chakra-ui/react';
 import { RepeatIcon, CheckCircleIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon } from '@chakra-ui/icons';
 
 const InterviewSimulator = () => {
   // State variables
@@ -50,6 +55,9 @@ const InterviewSimulator = () => {
   const [avatarIndex, setAvatarIndex] = useState(0);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isPlayback, setIsPlayback] = useState(false);
+  const [isGeneratingAvatar, setIsGeneratingAvatar] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarGenerationError, setAvatarGenerationError] = useState(null);
   
   // Refs
   const mediaRecorderRef = useRef(null);
@@ -67,10 +75,6 @@ const InterviewSimulator = () => {
   const overallBg = useColorModeValue('gray.50', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   
-  // Avatar images (in a real app, you would import these)
-  const avatars = Array.from({ length: 24 }, (_, i) => 
-    `/Avatars/Asset ${i + 8}.png`
-  );
   
   // Topics
   const topics = [
@@ -85,6 +89,55 @@ const InterviewSimulator = () => {
     'Initiative'
   ];
   
+
+  const generatePersonImage = async () => {
+    setIsGeneratingAvatar(true);
+    setAvatarGenerationError(null);
+    
+    try {
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "dall-e-2",
+          prompt: "Professional headshot portrait of a person in business casual attire with neutral background, looking friendly and approachable. Diverse appearance, high quality, photorealistic.",
+          n: 1,
+          size: "512x512"
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setAvatarUrl(data.data[0].url);
+      
+      toast({
+        title: 'New interviewer generated',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error generating person image:', error);
+      setAvatarGenerationError(error.message);
+      
+      toast({
+        title: 'Error generating image',
+        description: 'Could not generate a new interviewer image',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsGeneratingAvatar(false);
+    }
+  };
+
   // Default questions by topic (fallback if API fails)
   const defaultQuestions = {
     'Teamwork': [
@@ -161,8 +214,7 @@ const InterviewSimulator = () => {
 
   // Function to randomize the avatar
   const randomizeAvatar = () => {
-    const newIndex = Math.floor(Math.random() * avatars.length);
-    setAvatarIndex(newIndex);
+    generatePersonImage();
   };
 
   // Function to fetch interview questions from OpenAI API for a specific topic
@@ -297,10 +349,9 @@ const InterviewSimulator = () => {
           // Reset interview state
           resetInterview();
           
-          // Randomly change avatar
-          // randomizeAvatar();
+          generatePersonImage();
         }
-      }, 100); // Short delay to ensure state has updated
+      }, 100);
       
     } catch (error) {
       console.error(`Error fetching ${topic} interview questions:`, error);
@@ -384,6 +435,7 @@ const InterviewSimulator = () => {
     
     setCurrentQuestion(questions[randomIndex]);
     resetInterview();
+    generatePersonImage();
   };
 
   // Handle topic change
@@ -656,6 +708,7 @@ const InterviewSimulator = () => {
   // Load questions for the initial topic on component mount
   useEffect(() => {
     fetchInterviewQuestions(selectedTopic);
+    generatePersonImage();
   }, []);
 
   // Select a random question when API questions are loaded
@@ -701,40 +754,225 @@ const InterviewSimulator = () => {
           </Heading>
         </Box>
         
-        {/* Topic selector */}
+        {/* Topic selector with Menu */}
         <Flex mb={4} alignItems="center">
           <Text fontWeight="medium" mr={3}>Topics</Text>
-          <Select 
-            value={selectedTopic}
-            onChange={handleTopicChange}
-            maxW="250px"
-            borderRadius="md"
-            isDisabled={isLoadingQuestions}
-          >
-            {topics.map(topic => (
-              <option key={topic} value={topic}>{topic}</option>
-            ))}
-          </Select>
+          <Menu>
+            <MenuButton 
+              as={Button} 
+              rightIcon={<ChevronDownIcon />}
+              isDisabled={isLoadingQuestions}
+              width="250px"
+              textAlign="left"
+              fontWeight="normal"
+              borderRadius="md"
+              bg="white"
+              borderWidth="1px"
+              borderColor="gray.300"
+              _hover={{ borderColor: "blue.400" }}
+              _active={{ bg: "white" }}
+              _expanded={{ borderColor: "blue.500", boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)" }}
+            >
+              {selectedTopic}
+            </MenuButton>
+            <MenuList maxH="300px" overflowY="auto">
+              {topics.map(topic => (
+                <MenuItem 
+                  key={topic} 
+                  onClick={() => {
+                    setSelectedTopic(topic);
+                    handleTopicChange({ target: { value: topic } });
+                  }}
+                  fontWeight={selectedTopic === topic ? "bold" : "normal"}
+                  color={selectedTopic === topic ? "blue.500" : "inherit"}
+                >
+                  {topic}
+                </MenuItem>
+              ))}
+            </MenuList>
+          </Menu>
         </Flex>
-        
-        {/* Question and avatar section */}
-        <Flex alignItems="flex-start" mb={4}>
-          <IconButton
-            icon={<RepeatIcon />}
-            aria-label="Shuffle avatar"
-            size="sm"
-            mr={2}
-            onClick={randomizeAvatar}
-            isDisabled={isLoadingQuestions}
-          />
-          
+
+        {/* Question and avatar section with responsive design*/}
+        <Flex 
+          alignItems="flex-start" 
+          mb={4}
+          flexDirection={{ base: "column", md: "row" }}
+        >
           <Box 
-            as="img"
-            src={avatars[avatarIndex] || "/avatar1.png"} 
-            alt="Interviewer avatar"
-            boxSize="80px"
-            mr={4}
-          />
+            position="relative"
+            mb={{ base: 4, md: 0 }}
+            alignSelf={{ base: "center", md: "flex-start" }}
+          >
+            {isGeneratingAvatar ? (
+              <Flex 
+                align="center" 
+                justify="center" 
+                width={{ base: "120px", sm: "150px", md: "180px" }}
+                height={{ base: "120px", sm: "150px", md: "180px" }}
+                border="0px" 
+                borderColor="gray.200" 
+                borderRadius="md" 
+                mr={{ base: 0, md: 4 }}
+                bg="gray.100"
+              >
+                <CircularProgress isIndeterminate color="blue.500" size="40px" />
+              </Flex>
+            ) : avatarGenerationError ? (
+              <Flex 
+                align="center" 
+                justify="center" 
+                width={{ base: "120px", sm: "150px", md: "180px" }}
+                height={{ base: "120px", sm: "150px", md: "180px" }}
+                border="0px" 
+                borderColor="red.200" 
+                borderRadius="md" 
+                mr={{ base: 0, md: 4 }}
+                bg="red.50"
+              >
+                <Text fontSize="sm" color="red.500" textAlign="center" p={2}>
+                  Image error
+                </Text>
+              </Flex>
+            ) : (
+              <Box 
+                as="img" 
+                src={avatarUrl || `${process.env.PUBLIC_URL}/placeholder-avatar.png`}
+                alt="Interviewer" 
+                width={{ base: "120px", sm: "150px", md: "180px" }}
+                height={{ base: "120px", sm: "150px", md: "180px" }}
+                borderRadius="md" 
+                mr={{ base: 0, md: 4 }}
+                objectFit="cover"
+                border="0px"
+                borderColor="gray.200"
+              />
+            )}
+          </Box>
+          
+          {/* Dialogue bubble with responsive design */}
+          <Box 
+            position="relative" 
+            flex="1" 
+            width="100%"
+            pl={{ base: 0, md: 4 }} // Add padding to move dialogue box to the right
+          >
+            {/* Square pointer - only visible on medium screens and up */}
+            <Box
+              position="absolute"
+              left="4px"
+              top="50px"
+              width="24px"
+              height="24px"
+              bg={questionBubbleBg}
+              transform="rotate(45deg)"
+              display={{ base: "none", md: "block" }}
+              // zIndex="1"
+              borderWidth="0 0 0 0px"
+              borderColor="gray.200"
+            />
+            
+            <Box 
+              position="relative"
+              bg={questionBubbleBg}
+              p={4}
+              borderRadius="lg"
+              minH={{ base: "120px", md: "180px" }}
+              maxW={{ base: "100%", md: "100%" }}
+              display="flex"
+              flexDirection="column"
+              justifyContent="space-between"
+            >
+              {isLoadingQuestions ? (
+                <Flex direction="column" align="center" justify="center" h="100%">
+                  <CircularProgress isIndeterminate color="blue.500" size="40px" mb={2} />
+                  <Text fontSize="sm">Loading questions...</Text>
+                </Flex>
+              ) : (
+                <Text 
+                  fontSize="md" 
+                  fontWeight="regular"
+                  mb={4}
+                  mt={4}  // Add top margin
+                  mx={4}  // Add horizontal margin
+                  ml={8}
+                  mr={8}
+                >
+                  {currentQuestion}
+                </Text>
+              )}
+              
+              <Box alignSelf="flex-end">
+                <Button
+                  size="sm"
+                  colorScheme="blue"
+                  bg="#5789A8"
+                  _hover={{ bg: "#4A7A99" }}
+                  onClick={selectRandomQuestion}
+                  isDisabled={isLoadingQuestions}
+                  borderRadius="md"
+                  px={4}
+                >
+                  Another Question
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+        </Flex>
+
+
+
+
+
+
+
+        
+        
+        {/* Question and avatar section
+        <Flex alignItems="flex-start" mb={4}>
+          <Box position="relative">
+            {isGeneratingAvatar ? (
+              <Flex 
+                align="center" 
+                justify="center" 
+                boxSize="180px" 
+                border="1px" 
+                borderColor="gray.200" 
+                borderRadius="md" 
+                mr={4}
+                bg="gray.100"
+              >
+                <CircularProgress isIndeterminate color="blue.500" size="40px" />
+              </Flex>
+            ) : avatarGenerationError ? (
+              <Flex 
+                align="center" 
+                justify="center" 
+                boxSize="180px"
+                border="1px" 
+                borderColor="red.200" 
+                borderRadius="md" 
+                mr={4}
+                bg="red.50"
+              >
+                <Text fontSize="sm" color="red.500" textAlign="center" p={2}>
+                  Image error
+                </Text>
+              </Flex>
+            ) : (
+              <Box 
+                as="img" 
+                src={avatarUrl || `${process.env.PUBLIC_URL}/placeholder-avatar.png`}
+                alt="Interviewer" 
+                boxSize="180px" 
+                borderRadius="md" 
+                mr={4} 
+                objectFit="cover"
+                border="1px"
+                borderColor="gray.200"
+              />
+            )}
+          </Box>
           
           <Box 
             position="relative"
@@ -768,7 +1006,7 @@ const InterviewSimulator = () => {
               Skip this
             </Button>
           </Box>
-        </Flex>
+        </Flex> */}
         
         {/* Answer section */}
         <Card bg={cardBg} shadow="sm" borderRadius="lg" p={6}>
