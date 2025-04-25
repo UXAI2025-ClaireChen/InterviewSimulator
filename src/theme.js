@@ -1,6 +1,23 @@
 import { extendTheme } from "@chakra-ui/react";
 
+const colors = {
+    brand: {
+      10: '#F6F9FA',
+      50: '#EBF1F3',
+      100: '#DAE4E8',
+      200: '#B0C7D0',
+      300: '#92B1BC',
+      400: '#73A0AF',
+      500: '#548293', // Main color
+      600: '#3E6576',
+      700: '#194859',
+      800: '#103543',
+      900: '#072935',
+    }
+  };
+
 const theme = extendTheme({
+    colors,
     fonts: {
       heading: `'Montserrat', sans-serif`,
       body: `'Montserrat', sans-serif`,
@@ -41,21 +58,27 @@ const theme = extendTheme({
     components: {
       Heading: {
         baseStyle: {
-          fontWeight: 'bold', // 700
+          fontWeight: 'bold',
           lineHeight: 'short',
         },
         sizes: {
-          xl: {
-            fontSize: '4xl',
-          },
-          lg: {
+          '3xl': {
             fontSize: '3xl',
           },
-          md: {
+          '2xl': {
             fontSize: '2xl',
           },
-          sm: {
+          xl: {
             fontSize: 'xl',
+          },
+          lg: {
+            fontSize: 'lg',
+          },
+          md: {
+            fontSize: 'md',
+          },
+          sm: {
+            fontSize: 'sm',
           },
         },
       },
