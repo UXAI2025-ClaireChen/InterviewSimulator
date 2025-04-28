@@ -98,10 +98,108 @@ export const analyzeResponse = async (question, answer) => {
     }
     
     const data = await response.json();
-    return JSON.parse(data.choices[0].message.content);
+    
+    // Parse the analysis results
+    const analysisResult = JSON.parse(data.choices[0].message.content);
+    
+    // Then immediately generate an example answer based on the analysis
+    const exampleAnswer = await generateExampleAnswer(question, answer, analysisResult);
+    
+    // Add the example answer to the analysis result
+    analysisResult.exampleAnswer = exampleAnswer;
+    
+    return analysisResult;
   } catch (error) {
     console.error('Error analyzing response:', error);
     throw error;
+  }
+};
+
+/**
+ * Generate an example answer based on the question, user's answer, and analysis
+ * @param {string} question - The interview question
+ * @param {string} answer - The user's answer
+ * @param {Object} analysis - The analysis results
+ * @returns {Promise<string>} AI-generated example answer
+ */
+export const generateExampleAnswer = async (question, answer, analysis) => {
+  try {
+    console.log("Generating example answer based on analysis...");
+    
+    // Extract the weak areas from the analysis
+    const weakAreas = [];
+    
+    // Check category scores and add weak areas
+    Object.entries(analysis.categories).forEach(([category, data]) => {
+      if (data.score < 75) {
+        weakAreas.push(`${category}: ${data.feedback}`);
+      }
+    });
+    
+    // Create a prompt for generating an example answer
+    const response = await fetch(`${API_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: createHeaders(),
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system", 
+            content: `You are an expert interview coach. Create an example of an excellent answer 
+            to a behavioral interview question using the STAR (Situation, Task, Action, Result) method. 
+            The example should address the weaknesses in the user's original answer while being concise, 
+            specific, and including measurable results. Format the response with clear "Situation:", "Task:", 
+            "Action:", and "Result:" sections. IMPORTANT: Do not use any special formatting like bold, italic, or Markdown syntax. 
+            Do not use asterisks (*) or other special characters to emphasize text. 
+            Simply use plain text with the section labels.` 
+          },
+          {
+            role: "user", 
+            content: `
+            Interview Question: ${question}
+            
+            User's Answer: ${answer}
+            
+            Analysis Feedback:
+            Overall Score: ${analysis.overallScore}/100
+            General Feedback: ${analysis.generalFeedback}
+            
+            Areas for improvement:
+            ${weakAreas.length > 0 ? weakAreas.join('\n') : 'Overall structure and content could be improved.'}
+            
+            Improvement Suggestions:
+            ${analysis.improvementSuggestions.join('\n')}
+            
+            Create an excellent example answer that:
+            1. Follows the STAR format explicitly with labeled sections
+            2. Addresses the weaknesses identified above
+            3. Demonstrates best practices for answering this type of question
+            4. Includes specific details and quantifiable results
+            5. Is realistic and professional
+            `
+          }
+        ]
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error('Error generating example answer:', error);
+    // Provide a fallback example in case of API error
+    return `Here's an example of a strong response:
+
+Situation: I was part of a cross-functional team working on a critical project with tight deadlines.
+
+Task: My responsibility was to coordinate between different departments and ensure alignment on project goals and timelines.
+
+Action: I established clear communication protocols, created shared documentation, and held regular check-in meetings to track progress and address issues proactively.
+
+Result: As a result, we completed the project two weeks ahead of schedule with a 95% satisfaction rate from stakeholders. The approach I developed became a best practice for future cross-functional projects.`;
   }
 };
 
