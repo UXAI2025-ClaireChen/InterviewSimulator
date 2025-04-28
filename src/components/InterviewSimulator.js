@@ -65,6 +65,7 @@ const InterviewSimulator = () => {
     isAnalyzing,
     analyzeUserResponse,
     resetFeedback,
+    setFeedbackManually,
   } = useResponseAnalysis();
   
   const {
@@ -133,21 +134,34 @@ const InterviewSimulator = () => {
       changeTopic(topic);
     }
     
-    // Load the feedback from the history item
+    // Load the feedback directly from history instead of re-analyzing
     resetFeedback(); // First clear existing feedback
     
     // Set the user's answer - for text mode we can update directly
     if (isTextInputMode) {
       setTextInputValue(entry.answer);
     } else {
-      // For voice mode, we can't directly set recordedText, so we'll reset and then
-      // rely on the useEffect to update the UI once feedback is loaded
+      // For voice mode, we can't directly set recordedText
+      // We'll just reset it for now - the feedback will still show
       resetRecording();
     }
     
-    // Set the feedback with a slight delay to ensure reset has completed
+    // Directly set the feedback from the history entry
     setTimeout(() => {
-      analyzeUserResponse(entry.question, entry.answer);
+      if (entry.feedback) {
+        // Create the feedback object from the saved history
+        const savedFeedback = {
+          overallScore: entry.score,
+          generalFeedback: entry.feedback.generalFeedback,
+          categories: entry.feedback.categories,
+          additionalMetrics: entry.feedback.additionalMetrics,
+          improvementSuggestions: entry.feedback.improvementSuggestions,
+          exampleAnswer: entry.feedback.exampleAnswer
+        };
+        
+        // Use our new method to directly set the feedback without re-analyzing
+        setFeedbackManually(savedFeedback);
+      }
       
       // Mark as saved
       setIsSaved(true);

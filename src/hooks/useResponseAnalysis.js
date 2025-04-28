@@ -83,6 +83,14 @@ const useResponseAnalysis = () => {
   const resetFeedback = () => {
     setFeedback(null);
   };
+  
+  /**
+   * Manually set feedback (for loading from history)
+   * @param {Object} feedbackData - The feedback data to set
+   */
+  const setFeedbackManually = (feedbackData) => {
+    setFeedback(feedbackData);
+  };
 
   return {
     // State
@@ -92,6 +100,7 @@ const useResponseAnalysis = () => {
     // Methods
     analyzeUserResponse,
     resetFeedback,
+    setFeedbackManually, // Added new method
   };
 };
 
