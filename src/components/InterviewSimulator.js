@@ -13,7 +13,8 @@ import AnswerPanel from './AnswerPanel';
 import FeedbackPanel from './FeedbackPanel';
 import HistorySidebar from './History/HistorySidebar';
 import HistoryToggleButton from './History/HistoryToggleButton';
-import HistoryDetailModal from './History/HistoryDetailModal';
+import HistoryDetailPanel from './History/HistoryDetailPanel';
+import NewQuestionButton from './History/NewQuestionButton';
 
 // Hooks
 import useAudioRecording from '../hooks/useAudioRecording';
@@ -31,8 +32,9 @@ const InterviewSimulator = () => {
   const [textInputValue, setTextInputValue] = useState('');
   const [currentHistoryItem, setCurrentHistoryItem] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
+  const [showHistoryDetail, setShowHistoryDetail] = useState(false);
+  const [showQuestionPanel, setShowQuestionPanel] = useState(true);
   
   // Custom hooks
   const {
@@ -130,51 +132,11 @@ const InterviewSimulator = () => {
   };
   
   // Handle selecting a history item
-  const handleSelectHistoryItem = (topic, date, entry) => {
-    // Change to the topic if different
-    if (topic !== selectedTopic) {
-      changeTopic(topic);
-    }
-    
-    // Load the feedback directly from history instead of re-analyzing
-    resetFeedback(); // First clear existing feedback
-    
-    // Set the user's answer - for text mode we can update directly
-    if (isTextInputMode) {
-      setTextInputValue(entry.answer);
-    } else {
-      // For voice mode, we can't directly set recordedText
-      // We'll just reset it for now - the feedback will still show
-      resetRecording();
-    }
-    
-    // Directly set the feedback from the history entry
-    setTimeout(() => {
-      if (entry.feedback) {
-        // Create the feedback object from the saved history
-        const savedFeedback = {
-          overallScore: entry.score,
-          generalFeedback: entry.feedback.generalFeedback,
-          categories: entry.feedback.categories,
-          additionalMetrics: entry.feedback.additionalMetrics,
-          improvementSuggestions: entry.feedback.improvementSuggestions,
-          exampleAnswer: entry.feedback.exampleAnswer
-        };
-        
-        // Use our new method to directly set the feedback without re-analyzing
-        setFeedbackManually(savedFeedback);
-      }
-      
-      // Mark as saved
-      setIsSaved(true);
-      
-      // Keep track of current history item
-      setCurrentHistoryItem({
-        topic,
-        date,
-        id: entry.id
-      });
-    }, 100);
+  const handleSelectHistoryItem = (historyItem) => {
+    // Set the selected history item
+    setSelectedHistoryItem(historyItem);
+    setShowHistoryDetail(true);
+    setShowQuestionPanel(false); // 隱藏問題面板，顯示歷史詳情
     
     // Close the history sidebar on mobile
     if (window.innerWidth < 768) {
@@ -182,31 +144,40 @@ const InterviewSimulator = () => {
     }
   };
   
-  // Handle opening the detail modal
-  const handleOpenDetailModal = (historyItem) => {
-    setSelectedHistoryItem(historyItem);
-    setIsDetailModalOpen(true);
-  };
-  
   // Handle practicing the same question again
   const handlePracticeAgain = (historyItem) => {
-    // Set current question to the history item's question and reset
-    if (historyItem && historyItem.question) {
-      // Reset the interview state
-      resetInterview();
-      
-      // We can't directly set the current question, 
-      // but we can try to find and select it from the current topic
-      const itemTopic = historyItem.topic || selectedTopic;
-      if (itemTopic !== selectedTopic) {
-        changeTopic(itemTopic);
-      }
-      
-      // Close the history sidebar on mobile
-      if (window.innerWidth < 768) {
-        toggleHistory();
-      }
+    // Reset the interview state
+    resetInterview();
+    
+    // Set topic if different from current
+    const itemTopic = historyItem.topic || selectedTopic;
+    if (itemTopic !== selectedTopic) {
+      changeTopic(itemTopic);
     }
+    
+    // Hide the history detail and show question panel
+    setShowHistoryDetail(false);
+    setShowQuestionPanel(true);
+    
+    // Close the history sidebar on mobile
+    if (window.innerWidth < 768 && isHistoryOpen) {
+      toggleHistory();
+    }
+  };
+  
+  // Close history detail panel and show the question panel
+  const handleCloseHistoryDetail = () => {
+    setShowHistoryDetail(false);
+    setSelectedHistoryItem(null);
+    setShowQuestionPanel(true);
+  };
+  
+  // Start a new question
+  const handleStartNewQuestion = () => {
+    handleQuestionChange();
+    setShowHistoryDetail(false);
+    setSelectedHistoryItem(null);
+    setShowQuestionPanel(true);
   };
 
   // Calculate content margin based on history sidebar state
@@ -224,8 +195,9 @@ const InterviewSimulator = () => {
         onClose={toggleHistory}
         onDeleteEntry={deleteHistoryEntry}
         onClearHistory={clearAllHistory}
-        onSelectHistoryItem={handleOpenDetailModal}
+        onSelectHistoryItem={handleSelectHistoryItem}
         getScoreColor={getScoreColor}
+        selectedHistoryItemId={selectedHistoryItem?.id}
       />
       
       {/* History toggle button */}
@@ -234,6 +206,11 @@ const InterviewSimulator = () => {
         onClick={toggleHistory}
         display={{ base: 'block', md: 'block' }}
       />
+      
+      {/* "Start a new question" button - only shown when viewing history details */}
+      {!showQuestionPanel && (
+        <NewQuestionButton onClick={handleStartNewQuestion} />
+      )}
       
       {/* Main content */}
       <Box ml={contentMargin} transition="margin-left 0.3s">
@@ -246,64 +223,68 @@ const InterviewSimulator = () => {
               </Heading>
             </Box>
             
-            {/* Question Panel */}
-            <QuestionPanel
-              selectedTopic={selectedTopic}
-              currentQuestion={currentQuestion}
-              isLoadingQuestions={isLoadingQuestions}
-              onTopicChange={changeTopic}
-              onQuestionChange={handleQuestionChange}
-              avatarUrl={avatarUrl}
-              isGeneratingAvatar={isLoadingAvatar}
-              avatarGenerationError={avatarError}
-              onGenerateAvatar={selectRandomAvatar}
-            />
-            
-            {/* Answer Panel */}
-            <AnswerPanel
-              isTextInputMode={isTextInputMode}
-              toggleTextMode={toggleTextMode}
-              textInputValue={textInputValue}
-              setTextInputValue={setTextInputValue}
-              isRecording={isRecording}
-              recordedText={recordedText}
-              isTranscribing={isTranscribing}
-              recordingTime={recordingTime}
-              currentPlaybackTime={currentPlaybackTime}
-              formattedTime={formattedTime}
-              formattedCurrentTime={formattedCurrentTime}
-              isPlayback={isPlayback}
-              isAnalyzing={isAnalyzing}
-              startRecording={startRecording}
-              stopRecording={stopRecording}
-              togglePlayback={togglePlayback}
-              resetRecording={resetRecording}
-              handleTextInputSubmit={handleAnswerSubmit}
-            />
-            
-            {/* Feedback Panel */}
-            {feedback && (
-              <FeedbackPanel
-                feedback={feedback}
-                currentQuestion={currentQuestion}
-                userAnswer={isTextInputMode ? textInputValue : recordedText}
-                onReset={resetInterview}
-                onSaveResult={handleSaveResult}
-                isSaved={isSaved}
+            {/* Conditional Content - Either Question Panel or History Detail */}
+            {showQuestionPanel ? (
+              <VStack spacing={4} align="stretch">
+                {/* Question Panel */}
+                <QuestionPanel
+                  selectedTopic={selectedTopic}
+                  currentQuestion={currentQuestion}
+                  isLoadingQuestions={isLoadingQuestions}
+                  onTopicChange={changeTopic}
+                  onQuestionChange={handleQuestionChange}
+                  avatarUrl={avatarUrl}
+                  isGeneratingAvatar={isLoadingAvatar}
+                  avatarGenerationError={avatarError}
+                  onGenerateAvatar={selectRandomAvatar}
+                />
+                
+                {/* Answer Panel */}
+                <AnswerPanel
+                  isTextInputMode={isTextInputMode}
+                  toggleTextMode={toggleTextMode}
+                  textInputValue={textInputValue}
+                  setTextInputValue={setTextInputValue}
+                  isRecording={isRecording}
+                  recordedText={recordedText}
+                  isTranscribing={isTranscribing}
+                  recordingTime={recordingTime}
+                  currentPlaybackTime={currentPlaybackTime}
+                  formattedTime={formattedTime}
+                  formattedCurrentTime={formattedCurrentTime}
+                  isPlayback={isPlayback}
+                  isAnalyzing={isAnalyzing}
+                  startRecording={startRecording}
+                  stopRecording={stopRecording}
+                  togglePlayback={togglePlayback}
+                  resetRecording={resetRecording}
+                  handleTextInputSubmit={handleAnswerSubmit}
+                />
+                
+                {/* Feedback Panel */}
+                {feedback && (
+                  <FeedbackPanel
+                    feedback={feedback}
+                    currentQuestion={currentQuestion}
+                    userAnswer={isTextInputMode ? textInputValue : recordedText}
+                    onReset={resetInterview}
+                    onSaveResult={handleSaveResult}
+                    isSaved={isSaved}
+                  />
+                )}
+              </VStack>
+            ) : (
+              /* History Detail Panel - Shown when history item is selected */
+              <HistoryDetailPanel
+                historyItem={selectedHistoryItem}
+                onClose={handleCloseHistoryDetail}
+                onPracticeAgain={handlePracticeAgain}
+                getScoreColor={getScoreColor}
               />
             )}
           </VStack>
         </Container>
       </Box>
-      
-      {/* History Detail Modal */}
-      <HistoryDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        historyItem={selectedHistoryItem}
-        onPracticeAgain={handlePracticeAgain}
-        getScoreColor={getScoreColor}
-      />
     </Box>
   );
 };

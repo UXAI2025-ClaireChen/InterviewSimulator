@@ -13,10 +13,18 @@ import { DeleteIcon } from '@chakra-ui/icons';
 /**
  * History item component for displaying a single history entry
  */
-const HistoryItem = ({ entry = {}, onSelect, onDelete, getScoreColor = () => 'gray.500' }) => {
+const HistoryItem = ({ 
+  entry = {}, 
+  onSelect, 
+  onDelete, 
+  getScoreColor = () => 'gray.500',
+  isSelected = false 
+}) => {
   // Colors - must be called before any conditional returns
   const bg = useColorModeValue('gray.50', 'gray.700');
   const hoverBg = useColorModeValue('gray.100', 'gray.600');
+  const selectedBg = useColorModeValue('blue.50', 'blue.900');
+  const selectedBorder = useColorModeValue('blue.500', 'blue.300');
   
   // Ensure entry is valid
   if (!entry || !entry.question) {
@@ -38,9 +46,10 @@ const HistoryItem = ({ entry = {}, onSelect, onDelete, getScoreColor = () => 'gr
       borderWidth="1px"
       borderRadius="md"
       overflow="hidden"
-      bg={bg}
+      bg={isSelected ? selectedBg : bg}
+      borderColor={isSelected ? selectedBorder : 'gray.200'}
       _hover={{
-        bg: hoverBg,
+        bg: isSelected ? selectedBg : hoverBg,
         cursor: 'pointer',
         transform: 'translateY(-2px)',
         transition: 'all 0.2s'
@@ -54,7 +63,11 @@ const HistoryItem = ({ entry = {}, onSelect, onDelete, getScoreColor = () => 'gr
     >
       <Flex justify="space-between" align="center" p={2}>
         <Flex direction="column" flex="1" minW="0">
-          <Text fontSize="sm" noOfLines={2} fontWeight="medium">
+          <Text 
+            fontSize="sm" 
+            noOfLines={2} 
+            fontWeight={isSelected ? "bold" : "medium"}
+          >
             {truncateText(entry.question)}
           </Text>
           

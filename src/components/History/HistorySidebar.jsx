@@ -34,13 +34,14 @@ import ProgressSummary from './ProgressSummary';
  * History sidebar component
  */
 const HistorySidebar = ({ 
-  history = {}, // Add default empty object
+  history = {}, 
   isOpen, 
   onClose, 
   onDeleteEntry, 
   onClearHistory,
   onSelectHistoryItem,
-  getScoreColor
+  getScoreColor,
+  selectedHistoryItemId = null
 }) => {
   // Calculate if we should use a drawer on mobile
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -50,16 +51,16 @@ const HistorySidebar = ({
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const headerBg = useColorModeValue('gray.50', 'gray.700');
   
-  // 處理歷史項目選擇
+  // Handle history item selection
   const handleItemSelect = (topic, date, entry) => {
-    // 創建完整的歷史項目，包含topic和其他上下文信息
+    // Create complete history item with topic and other context info
     const completeHistoryItem = {
       ...entry,
       topic: topic,
       date: date
     };
     
-    // 調用父組件提供的選擇處理函數
+    // Call the parent component's selection handler function
     if (onSelectHistoryItem) {
       onSelectHistoryItem(completeHistoryItem);
     }
@@ -127,6 +128,7 @@ const HistorySidebar = ({
                                 onSelect={() => handleItemSelect(topic, date, entry)}
                                 onDelete={() => onDeleteEntry && onDeleteEntry(topic, date, entry.id)}
                                 getScoreColor={getScoreColor}
+                                isSelected={selectedHistoryItemId === entry.id}
                               />
                             ))}
                           </VStack>
