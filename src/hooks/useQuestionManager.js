@@ -8,6 +8,7 @@ import { defaultQuestions } from '../data/defaultQuestions';
  * @param {string} initialTopic - Initial topic to load
  * @returns {Object} Question management methods and state
  */
+
 const useQuestionManager = (initialTopic = 'Teamwork') => {
   // State
   const [selectedTopic, setSelectedTopic] = useState(initialTopic);
@@ -99,6 +100,10 @@ const useQuestionManager = (initialTopic = 'Teamwork') => {
     }
   }, [toast]);
 
+  const setCustomQuestion = (question) => {
+    setCurrentQuestion(question);
+  };
+  
   /**
    * Select a random question from the current topic
    */
@@ -173,6 +178,7 @@ const useQuestionManager = (initialTopic = 'Teamwork') => {
     // Methods
     changeTopic,
     selectRandomQuestion,
+    setCustomQuestion
   };
 };
 

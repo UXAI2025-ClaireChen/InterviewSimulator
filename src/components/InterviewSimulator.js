@@ -43,6 +43,7 @@ const InterviewSimulator = () => {
     isLoadingQuestions,
     changeTopic,
     selectRandomQuestion,
+    setCustomQuestion
   } = useQuestionManager('Teamwork');
   
   const {
@@ -154,6 +155,8 @@ const InterviewSimulator = () => {
     if (itemTopic !== selectedTopic) {
       changeTopic(itemTopic);
     }
+
+    setCustomQuestion(historyItem.question);
     
     // Hide the history detail and show question panel
     setShowHistoryDetail(false);
