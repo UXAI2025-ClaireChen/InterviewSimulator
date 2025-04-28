@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   VStack,
@@ -49,6 +49,21 @@ const HistorySidebar = ({
   const bg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const headerBg = useColorModeValue('gray.50', 'gray.700');
+  
+  // 處理歷史項目選擇
+  const handleItemSelect = (topic, date, entry) => {
+    // 創建完整的歷史項目，包含topic和其他上下文信息
+    const completeHistoryItem = {
+      ...entry,
+      topic: topic,
+      date: date
+    };
+    
+    // 調用父組件提供的選擇處理函數
+    if (onSelectHistoryItem) {
+      onSelectHistoryItem(completeHistoryItem);
+    }
+  };
   
   // Content of the sidebar
   const sidebarContent = (
@@ -109,7 +124,7 @@ const HistorySidebar = ({
                               <HistoryItem
                                 key={entry.id}
                                 entry={entry}
-                                onSelect={() => onSelectHistoryItem && onSelectHistoryItem(topic, date, entry)}
+                                onSelect={() => handleItemSelect(topic, date, entry)}
                                 onDelete={() => onDeleteEntry && onDeleteEntry(topic, date, entry.id)}
                                 getScoreColor={getScoreColor}
                               />

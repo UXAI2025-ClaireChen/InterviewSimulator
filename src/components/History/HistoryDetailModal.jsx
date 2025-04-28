@@ -15,6 +15,7 @@ import {
   Flex,
   Divider,
   useColorModeValue,
+  VStack,
 } from '@chakra-ui/react';
 import OverallScore from '../FeedbackPanel/OverallScore';
 import StarEvaluation from '../FeedbackPanel/StarEvaluation';
@@ -22,12 +23,31 @@ import StarEvaluation from '../FeedbackPanel/StarEvaluation';
 /**
  * Modal component to display history item details
  */
-const HistoryDetailModal = ({ isOpen, onClose, historyItem, getScoreColor }) => {
-  // If no history item is selected, don't render anything
-  if (!historyItem) return null;
-  
-  // Colors
+const HistoryDetailModal = ({ isOpen, onClose, historyItem, onPracticeAgain, getScoreColor }) => {
+  // Colors - Must be called before any conditional returns
   const bgColor = useColorModeValue('white', 'gray.800');
+  const answerBg = useColorModeValue('gray.50', 'gray.600');
+  
+  // If no history item is selected, render empty modal
+  if (!historyItem) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        <ModalOverlay />
+        <ModalContent bg={bgColor}>
+          <ModalHeader>History Details</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>No history item selected.</Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={onClose}>
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  }
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
@@ -55,46 +75,55 @@ const HistoryDetailModal = ({ isOpen, onClose, historyItem, getScoreColor }) => 
         <Divider />
         
         <ModalBody>
-          <Box mb={6}>
-            <Heading size="sm" mb={2}>Your Answer</Heading>
-            <Box 
-              p={4} 
-              borderWidth="1px" 
-              borderRadius="md" 
-              borderColor="gray.200"
-              bg="gray.50"
-            >
-              <Text whiteSpace="pre-wrap">{historyItem.answer}</Text>
+          <VStack spacing={6} align="stretch">
+            {/* User's answer */}
+            <Box>
+              <Heading size="md" mb={2}>My Answer</Heading>
+              <Box 
+                p={4} 
+                borderWidth="1px" 
+                borderRadius="md" 
+                borderColor="gray.200"
+                bg={answerBg}
+              >
+                <Text whiteSpace="pre-wrap">{historyItem.answer}</Text>
+              </Box>
             </Box>
-          </Box>
-          
-          <Divider mb={6} />
-          
-          <Box mb={6}>
-            <OverallScore 
-              score={historyItem.score} 
-              feedback={historyItem.feedback.generalFeedback} 
-            />
-          </Box>
-          
-          <Box mb={6}>
-            <StarEvaluation categories={historyItem.feedback.categories || {}} />
-          </Box>
-          
-          <Divider mb={6} />
-          
-          <Box mb={6}>
-            <Heading size="sm" mb={2}>Example Answer</Heading>
-            <Box 
-              p={4} 
-              borderWidth="1px" 
-              borderRadius="md" 
-              borderColor="gray.200"
-              bg="gray.50"
-            >
-              <Text whiteSpace="pre-wrap">{historyItem.feedback.exampleAnswer}</Text>
+            
+            <Divider />
+            
+            {/* Feedback */}
+            <Box>
+              <Heading size="md" mb={4}>AI Feedback</Heading>
+              
+              <Box mb={4}>
+                <OverallScore 
+                  score={historyItem.score} 
+                  feedback={historyItem.feedback?.generalFeedback || ''} 
+                />
+              </Box>
+              
+              <Box mb={4}>
+                <StarEvaluation categories={historyItem.feedback?.categories || {}} />
+              </Box>
             </Box>
-          </Box>
+            
+            <Divider />
+            
+            {/* Example answer */}
+            <Box>
+              <Heading size="md" mb={2}>Example Answer</Heading>
+              <Box 
+                p={4} 
+                borderWidth="1px" 
+                borderRadius="md" 
+                borderColor="gray.200"
+                bg={answerBg}
+              >
+                <Text whiteSpace="pre-wrap">{historyItem.feedback?.exampleAnswer || ''}</Text>
+              </Box>
+            </Box>
+          </VStack>
         </ModalBody>
 
         <ModalFooter>
@@ -103,6 +132,7 @@ const HistoryDetailModal = ({ isOpen, onClose, historyItem, getScoreColor }) => 
           </Button>
           <Button variant="ghost" onClick={() => {
             // Logic to practice with this question again
+            if (onPracticeAgain) onPracticeAgain(historyItem);
             onClose();
           }}>
             Practice Again

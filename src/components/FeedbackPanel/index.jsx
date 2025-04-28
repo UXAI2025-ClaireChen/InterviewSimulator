@@ -7,6 +7,8 @@ import {
   useColorModeValue,
   ButtonGroup,
   Tooltip,
+  Text,
+  Divider,
 } from '@chakra-ui/react';
 import SaveIcon from '../History/SaveIcon';
 import OverallScore from './OverallScore';
@@ -28,6 +30,7 @@ const FeedbackPanel = ({
 }) => {
   // Colors
   const cardBg = useColorModeValue('white', 'gray.700');
+  const answerBg = useColorModeValue('gray.50', 'gray.600');
   
   return (
     <Box 
@@ -35,7 +38,23 @@ const FeedbackPanel = ({
       mt={6}
       width="100%"
     >
-      <Box pb={12}>
+      {/* User's answer section */}
+      <Box mb={8}>
+        <Heading size="lg" mb={4}>My Answer</Heading>
+        <Box 
+          p={4} 
+          borderWidth="1px" 
+          borderRadius="md" 
+          bg={answerBg}
+          borderColor="gray.200"
+        >
+          <Text whiteSpace="pre-wrap">{userAnswer}</Text>
+        </Box>
+      </Box>
+      
+      <Divider mb={8} />
+      
+      <Box pb={8}>
         <Heading size="2xl">AI Feedback & Suggestions</Heading>
       </Box>
       <Box>

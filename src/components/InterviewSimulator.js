@@ -1,18 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Container,
   Heading,
   VStack,
-  useToast,
-  Flex,
   useColorModeValue,
 } from '@chakra-ui/react';
+
+// Components
 import QuestionPanel from './QuestionPanel';
 import AnswerPanel from './AnswerPanel';
 import FeedbackPanel from './FeedbackPanel';
 import HistorySidebar from './History/HistorySidebar';
 import HistoryToggleButton from './History/HistoryToggleButton';
+import HistoryDetailModal from './History/HistoryDetailModal';
+
+// Hooks
 import useAudioRecording from '../hooks/useAudioRecording';
 import useQuestionManager from '../hooks/useQuestionManager';
 import useAvatarSelector from '../hooks/useAvatarSelector';
@@ -28,6 +31,8 @@ const InterviewSimulator = () => {
   const [textInputValue, setTextInputValue] = useState('');
   const [currentHistoryItem, setCurrentHistoryItem] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   
   // Custom hooks
   const {
@@ -77,9 +82,6 @@ const InterviewSimulator = () => {
     toggleHistory,
     clearAllHistory,
   } = useHistoryManager();
-  
-  // Chakra UI toast
-  const toast = useToast();
   
   // Background color
   const bg = useColorModeValue('gray.50', 'gray.900');
@@ -179,6 +181,33 @@ const InterviewSimulator = () => {
       toggleHistory();
     }
   };
+  
+  // Handle opening the detail modal
+  const handleOpenDetailModal = (historyItem) => {
+    setSelectedHistoryItem(historyItem);
+    setIsDetailModalOpen(true);
+  };
+  
+  // Handle practicing the same question again
+  const handlePracticeAgain = (historyItem) => {
+    // Set current question to the history item's question and reset
+    if (historyItem && historyItem.question) {
+      // Reset the interview state
+      resetInterview();
+      
+      // We can't directly set the current question, 
+      // but we can try to find and select it from the current topic
+      const itemTopic = historyItem.topic || selectedTopic;
+      if (itemTopic !== selectedTopic) {
+        changeTopic(itemTopic);
+      }
+      
+      // Close the history sidebar on mobile
+      if (window.innerWidth < 768) {
+        toggleHistory();
+      }
+    }
+  };
 
   // Calculate content margin based on history sidebar state
   const contentMargin = { 
@@ -195,7 +224,7 @@ const InterviewSimulator = () => {
         onClose={toggleHistory}
         onDeleteEntry={deleteHistoryEntry}
         onClearHistory={clearAllHistory}
-        onSelectHistoryItem={handleSelectHistoryItem}
+        onSelectHistoryItem={handleOpenDetailModal}
         getScoreColor={getScoreColor}
       />
       
@@ -266,6 +295,15 @@ const InterviewSimulator = () => {
           </VStack>
         </Container>
       </Box>
+      
+      {/* History Detail Modal */}
+      <HistoryDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        historyItem={selectedHistoryItem}
+        onPracticeAgain={handlePracticeAgain}
+        getScoreColor={getScoreColor}
+      />
     </Box>
   );
 };
