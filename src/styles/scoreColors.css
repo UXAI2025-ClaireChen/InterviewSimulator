@@ -1,0 +1,46 @@
+/* Score color variables */
+:root {
+    --score-excellent: #38A169; /* green.500 */
+    --score-good: #48BB78; /* green.400 */
+    --score-average: #ECC94B; /* yellow.500 */
+    --score-below-average: #ED8936; /* orange.500 */
+    --score-poor: #E53E3E; /* red.500 */
+  }
+  
+  /* Score background colors with transparency for history items */
+  .score-excellent-bg {
+    background-color: rgba(56, 161, 105, 0.1);
+  }
+  
+  .score-good-bg {
+    background-color: rgba(72, 187, 120, 0.1);
+  }
+  
+  .score-average-bg {
+    background-color: rgba(236, 201, 75, 0.1);
+  }
+  
+  .score-below-average-bg {
+    background-color: rgba(237, 137, 54, 0.1);
+  }
+  
+  .score-poor-bg {
+    background-color: rgba(229, 62, 62, 0.1);
+  }
+  
+  /* Animation for score changes */
+  @keyframes score-pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+  .score-animation {
+    animation: score-pulse 0.5s ease-in-out;
+  }
