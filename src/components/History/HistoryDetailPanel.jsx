@@ -57,7 +57,8 @@ const HistoryDetailPanel = ({
     attemptCount = questionAttempts.length;
     
     // Find current attempt number (position in the array)
-    const sortedAttempts = [...questionAttempts].sort((a, b) => new Date(b.id) - new Date(a.id));
+    // Sort by date in ascending order (oldest first)
+    const sortedAttempts = [...questionAttempts].sort((a, b) => new Date(a.id) - new Date(b.id));
     currentAttemptNumber = sortedAttempts.findIndex(item => item.id === historyItem.id) + 1;
   }
   
