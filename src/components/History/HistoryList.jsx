@@ -13,6 +13,7 @@ import {
   VStack,
   IconButton,
   Tooltip,
+  Badge,
 } from '@chakra-ui/react';
 import { DeleteIcon } from '@chakra-ui/icons';
 import HistoryItem from './HistoryItem';
@@ -23,10 +24,11 @@ const HistoryList = ({
   onClearHistory,
   onSelectHistoryItem,
   getScoreColor,
+  getBestScore,
   selectedHistoryItemId,
 }) => {
   // Handle selecting an item
-  const handleItemSelect = (topic, date, entry) => {
+  const handleItemSelect = (topic, question, entry) => {
     if (onSelectHistoryItem) {
       onSelectHistoryItem(entry);
     }
@@ -42,7 +44,7 @@ const HistoryList = ({
         </Text>
       ) : (
         <Accordion defaultIndex={[0]} allowMultiple>
-          {Object.entries(history || {}).map(([topic, dates]) => (
+          {Object.entries(history || {}).map(([topic, questions]) => (
             <AccordionItem key={topic} border="none">
               <AccordionButton py={2} px={0}>
                 <Box flex="1" textAlign="left" fontWeight="medium">
@@ -51,25 +53,55 @@ const HistoryList = ({
                 <AccordionIcon />
               </AccordionButton>
               <AccordionPanel pb={4} pt={2} px={2}>
-                {Object.entries(dates || {}).map(([date, entries]) => (
-                  <Box key={date} mb={4}>
-                    <Text fontSize="sm" fontWeight="medium" mb={2} color="gray.600">
-                      {date}
-                    </Text>
-                    <VStack spacing={2} align="stretch">
-                      {(entries || []).map((entry) => (
-                        <HistoryItem
-                          key={entry.id}
-                          entry={entry}
-                          onSelect={() => handleItemSelect(topic, date, entry)}
-                          onDelete={() => onDeleteEntry && onDeleteEntry(topic, date, entry.id)}
-                          getScoreColor={getScoreColor}
-                          isSelected={selectedHistoryItemId === entry.id}
-                        />
-                      ))}
-                    </VStack>
-                  </Box>
-                ))}
+                <Accordion allowMultiple>
+                  {Object.entries(questions || {}).map(([question, entries]) => {
+                    const bestScore = getBestScore(entries);
+                    const attemptsCount = entries.length;
+                    
+                    return (
+                      <AccordionItem key={question} borderWidth="1px" borderRadius="md" mb={3} overflow="hidden">
+                        <AccordionButton py={2} px={3} bg="gray.50" _dark={{ bg: 'gray.700' }}>
+                          <Flex flex="1" alignItems="center" justifyContent="space-between">
+                            <Text fontSize="sm" fontWeight="medium" noOfLines={1}>
+                              {question}
+                            </Text>
+                            <Flex alignItems="center">
+                              <Badge 
+                                colorScheme={bestScore >= 80 ? 'green' : bestScore >= 60 ? 'yellow' : 'red'}
+                                mr={2}
+                              >
+                                {bestScore}
+                              </Badge>
+                              <Badge colorScheme="blue">
+                                {attemptsCount} {attemptsCount === 1 ? 'attempt' : 'attempts'}
+                              </Badge>
+                              <AccordionIcon ml={2} />
+                            </Flex>
+                          </Flex>
+                        </AccordionButton>
+                        <AccordionPanel pb={3} pt={2} px={2}>
+                          <Text fontSize="xs" mb={2} color="gray.600" _dark={{ color: 'gray.400' }}>
+                            Most recent attempts first
+                          </Text>
+                          <VStack spacing={2} align="stretch">
+                            {(entries || [])
+                              .sort((a, b) => new Date(b.id) - new Date(a.id)) // Sort by date, newest first
+                              .map((entry) => (
+                                <HistoryItem
+                                  key={entry.id}
+                                  entry={entry}
+                                  onSelect={() => handleItemSelect(topic, question, entry)}
+                                  onDelete={() => onDeleteEntry && onDeleteEntry(topic, question, entry.id)}
+                                  getScoreColor={getScoreColor}
+                                  isSelected={selectedHistoryItemId === entry.id}
+                                />
+                            ))}
+                          </VStack>
+                        </AccordionPanel>
+                      </AccordionItem>
+                    );
+                  })}
+                </Accordion>
               </AccordionPanel>
             </AccordionItem>
           ))}

@@ -70,7 +70,6 @@ const useHistoryManager = () => {
     }
     
     const timestamp = new Date().toISOString();
-    const dateKey = new Date().toLocaleDateString();
     
     setHistory(prevHistory => {
       // Create deep copy to ensure state update
@@ -81,16 +80,17 @@ const useHistoryManager = () => {
         newHistory[topic] = {};
       }
       
-      // Initialize date if it doesn't exist
-      if (!newHistory[topic][dateKey]) {
-        newHistory[topic][dateKey] = [];
+      // Initialize question if it doesn't exist
+      if (!newHistory[topic][question]) {
+        newHistory[topic][question] = [];
       }
       
       // Add new entry
-      newHistory[topic][dateKey].push({
+      newHistory[topic][question].push({
         id: timestamp,
         question,
         answer,
+        date: new Date().toLocaleDateString(),
         score: feedback.overallScore || 0,
         feedback: {
           generalFeedback: feedback.generalFeedback || '',
@@ -116,11 +116,11 @@ const useHistoryManager = () => {
   /**
    * Delete an entry from history
    * @param {string} topic - The topic of the entry
-   * @param {string} dateKey - The date key of the entry
+   * @param {string} question - The question
    * @param {string} entryId - The ID of the entry to delete
    */
-  const deleteHistoryEntry = (topic, dateKey, entryId) => {
-    if (!topic || !dateKey || !entryId) {
+  const deleteHistoryEntry = (topic, question, entryId) => {
+    if (!topic || !question || !entryId) {
       console.error('Missing required parameters for deleteHistoryEntry');
       return;
     }
@@ -133,14 +133,14 @@ const useHistoryManager = () => {
       const newHistory = JSON.parse(JSON.stringify(prevHistory));
       
       // Filter out the entry to delete
-      if (newHistory[topic] && newHistory[topic][dateKey]) {
-        newHistory[topic][dateKey] = newHistory[topic][dateKey].filter(
+      if (newHistory[topic] && newHistory[topic][question]) {
+        newHistory[topic][question] = newHistory[topic][question].filter(
           entry => entry.id !== entryId
         );
         
-        // Clean up empty date arrays
-        if (newHistory[topic][dateKey].length === 0) {
-          delete newHistory[topic][dateKey];
+        // Clean up empty questions
+        if (newHistory[topic][question].length === 0) {
+          delete newHistory[topic][question];
         }
         
         // Clean up empty topics
@@ -159,6 +159,16 @@ const useHistoryManager = () => {
       duration: 2000,
       isClosable: true,
     });
+  };
+
+  /**
+   * Get the best score for a given question
+   * @param {Array} entries - The entries for a question
+   * @returns {number} - The best score
+   */
+  const getBestScore = (entries) => {
+    if (!entries || entries.length === 0) return 0;
+    return Math.max(...entries.map(entry => entry.score || 0));
   };
 
   /**
@@ -205,6 +215,7 @@ const useHistoryManager = () => {
     // Methods
     saveResult,
     deleteHistoryEntry,
+    getBestScore,
     getScoreColor,
     toggleHistory,
     clearAllHistory,

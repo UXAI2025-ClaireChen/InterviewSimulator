@@ -10,6 +10,7 @@ import {
   IconButton,
   useColorModeValue,
   VStack,
+  Tooltip,
 } from '@chakra-ui/react';
 import { ArrowBackIcon, RepeatIcon } from '@chakra-ui/icons';
 import OverallScore from '../FeedbackPanel/OverallScore';
@@ -22,7 +23,9 @@ const HistoryDetailPanel = ({
   historyItem, 
   onClose, 
   onPracticeAgain, 
-  getScoreColor 
+  getScoreColor,
+  history = {},
+  selectedTopic = ''
 }) => {
   // Colors
   const bgColor = useColorModeValue('white', 'gray.800');
@@ -43,6 +46,19 @@ const HistoryDetailPanel = ({
         <Text>Click on any history item to view the details here.</Text>
       </Box>
     );
+  }
+  
+  // Count attempts for this question
+  let attemptCount = 0;
+  let currentAttemptNumber = 0;
+  
+  if (history && selectedTopic && historyItem.question) {
+    const questionAttempts = history[selectedTopic]?.[historyItem.question] || [];
+    attemptCount = questionAttempts.length;
+    
+    // Find current attempt number (position in the array)
+    const sortedAttempts = [...questionAttempts].sort((a, b) => new Date(b.id) - new Date(a.id));
+    currentAttemptNumber = sortedAttempts.findIndex(item => item.id === historyItem.id) + 1;
   }
   
   return (
@@ -83,9 +99,16 @@ const HistoryDetailPanel = ({
       
       {/* Date and metadata */}
       <Flex px={4} py={2} bg={headingBg} borderBottomWidth="1px" justify="space-between" align="center">
-        <Text fontSize="sm" color="gray.500">
-          {new Date(historyItem.id).toLocaleString()}
-        </Text>
+        <Flex align="center">
+          <Text fontSize="sm" color="gray.500">
+            {new Date(historyItem.id).toLocaleString()}
+          </Text>
+          <Tooltip label="The number of times you've attempted this question">
+            <Badge ml={2} colorScheme="blue">
+              Attempt {currentAttemptNumber} of {attemptCount}
+            </Badge>
+          </Tooltip>
+        </Flex>
         <Button
           leftIcon={<RepeatIcon />}
           colorScheme="blue"

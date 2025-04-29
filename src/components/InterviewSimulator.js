@@ -81,6 +81,7 @@ const InterviewSimulator = () => {
     isHistoryOpen,
     saveResult,
     deleteHistoryEntry,
+    getBestScore,
     getScoreColor,
     toggleHistory,
     clearAllHistory,
@@ -187,6 +188,7 @@ const InterviewSimulator = () => {
         onClearHistory={clearAllHistory}
         onSelectHistoryItem={handleSelectHistoryItem}
         getScoreColor={getScoreColor}
+        getBestScore={getBestScore}
         selectedHistoryItemId={selectedHistoryItem?.id}
       />
 
@@ -269,6 +271,8 @@ const InterviewSimulator = () => {
                 onClose={handleCloseHistoryDetail}
                 onPracticeAgain={handlePracticeAgain}
                 getScoreColor={getScoreColor}
+                history={history}
+                selectedTopic={selectedTopic}
               />
             )}
           </VStack>

@@ -31,12 +31,9 @@ const HistoryItem = ({
     return null;
   }
   
-  // Truncate question if it's too long
-  const truncateText = (text, maxLength = 40) => {
-    if (!text) return '';
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
-  };
+  // Format date nicer if available
+  const formattedDate = entry.date ? entry.date : 
+    (entry.id ? new Date(entry.id).toLocaleDateString() : '');
   
   // Default score to 0 if not provided
   const score = entry.score || 0;
@@ -63,15 +60,7 @@ const HistoryItem = ({
     >
       <Flex justify="space-between" align="center" p={2}>
         <Flex direction="column" flex="1" minW="0">
-          <Text 
-            fontSize="sm" 
-            noOfLines={2} 
-            fontWeight={isSelected ? "bold" : "medium"}
-          >
-            {truncateText(entry.question)}
-          </Text>
-          
-          <Flex mt={1} justify="space-between" align="center">
+          <Flex justify="space-between" align="center" mb={1}>
             <Badge
               colorScheme={score >= 80 ? 'green' : score >= 60 ? 'yellow' : 'red'}
               variant="solid"
@@ -81,7 +70,20 @@ const HistoryItem = ({
             >
               {score}
             </Badge>
+            
+            <Text fontSize="xs" color="gray.500">
+              {formattedDate}
+            </Text>
           </Flex>
+          
+          <Text 
+            fontSize="xs" 
+            color="gray.600"
+            _dark={{ color: 'gray.400' }}
+            noOfLines={1}
+          >
+            {entry.answer ? entry.answer.substring(0, 50) + (entry.answer.length > 50 ? '...' : '') : 'No answer recorded'}
+          </Text>
         </Flex>
         
         <Tooltip label="Delete" placement="top">

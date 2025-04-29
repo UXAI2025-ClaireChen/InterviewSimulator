@@ -26,6 +26,7 @@ const HistorySidebar = ({
   onClearHistory,
   onSelectHistoryItem,
   getScoreColor,
+  getBestScore,
   selectedHistoryItemId = null,
 }) => {
   // Determine if the device is mobile
@@ -68,6 +69,7 @@ const HistorySidebar = ({
           onClearHistory={onClearHistory}
           onSelectHistoryItem={onSelectHistoryItem}
           getScoreColor={getScoreColor}
+          getBestScore={getBestScore}
           selectedHistoryItemId={selectedHistoryItemId}
         />
       </Box>
