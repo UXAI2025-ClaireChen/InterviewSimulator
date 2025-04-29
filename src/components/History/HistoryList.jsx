@@ -61,11 +61,11 @@ const HistoryList = ({
                     return (
                       <AccordionItem key={question} borderWidth="1px" borderRadius="md" mb={3} overflow="hidden">
                         <AccordionButton py={2} px={3} bg="gray.50" _dark={{ bg: 'gray.700' }}>
-                          <Flex flex="1" alignItems="center" justifyContent="space-between">
+                          <Box flex="1">
                             <Text fontSize="sm" fontWeight="medium" noOfLines={1}>
                               {question}
                             </Text>
-                            <Flex alignItems="center">
+                            <Flex mt={1} alignItems="center">
                               <Badge 
                                 colorScheme={bestScore >= 80 ? 'green' : bestScore >= 60 ? 'yellow' : 'red'}
                                 mr={2}
@@ -75,14 +75,11 @@ const HistoryList = ({
                               <Badge colorScheme="blue">
                                 {attemptsCount} {attemptsCount === 1 ? 'attempt' : 'attempts'}
                               </Badge>
-                              <AccordionIcon ml={2} />
                             </Flex>
-                          </Flex>
+                          </Box>
+                          <AccordionIcon ml={2} />
                         </AccordionButton>
                         <AccordionPanel pb={3} pt={2} px={2}>
-                          {/* <Text fontSize="xs" mb={2} color="gray.600" _dark={{ color: 'gray.400' }}>
-                            Most recent attempts first
-                          </Text> */}
                           <VStack spacing={2} align="stretch">
                             {(entries || [])
                               .sort((a, b) => new Date(b.id) - new Date(a.id)) // Sort by date, newest first
