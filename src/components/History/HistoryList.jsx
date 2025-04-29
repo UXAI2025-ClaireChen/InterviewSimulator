@@ -74,11 +74,15 @@ const HistoryList = ({
                             <Flex mt={1} alignItems="center">
                               <Badge 
                                 colorScheme={bestScore >= 80 ? 'green' : bestScore >= 60 ? 'yellow' : 'red'}
+                                variant="solid"
                                 mr={2}
                               >
                                 {bestScore}
                               </Badge>
-                              <Badge colorScheme="blue">
+                              <Badge
+                                bg="brand.100"
+                                color="brand.700"
+                                >
                                 {attemptsCount} {attemptsCount === 1 ? 'attempt' : 'attempts'}
                               </Badge>
                             </Flex>

@@ -107,15 +107,17 @@ const HistoryDetailPanel = ({
         <Heading size="md" flex="1" noOfLines={1}>{historyItem.question}</Heading>
         <Flex align="center">
           <Tooltip label="The number of times you've attempted this question">
-            <Badge mr={2} colorScheme="blue">
+            <Badge mr={2} colorScheme="brand">
               Attempt {attemptInfo.current} of {attemptInfo.count}
             </Badge>
           </Tooltip>
           <Button
             leftIcon={<RepeatIcon />}
-            colorScheme="blue"
+            colorScheme="brand"
             size="sm"
-            variant="outline"
+            // variant="outline"
+            _hover={{ bg: "brand.700" }}
+            _active={{ bg: "brand.900" }}
             onClick={() => onPracticeAgain(historyItem)}
           >
             Practice Again
@@ -130,7 +132,7 @@ const HistoryDetailPanel = ({
         <Heading size="lg" mb={4}>Question & Answer</Heading>
         <Box mb={4} p={4} borderWidth="1px" borderRadius="md" bg="gray.100" _dark={{ bg: 'gray.700' }}>
           <Text fontWeight="medium">Question:</Text>
-          <Text ml={2} mt={1}>{historyItem.question}</Text>
+          <Text ml={0} mt={1}>{historyItem.question}</Text>
         </Box>
         <Box 
           p={4} 

@@ -15,5 +15,5 @@ export const formatTime = (seconds) => {
    * @returns {string} Color code for the score
    */
   export const getScoreColor = (score) => {
-    return score > 80 ? "green.500" : score > 60 ? "orange.500" : "red.500";
+    return score > 80 ? "green.500" : score > 60 ? "yellow.500" : "red.500";
   };

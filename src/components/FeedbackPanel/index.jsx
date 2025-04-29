@@ -29,8 +29,8 @@ const FeedbackPanel = ({
   isSaved = false
 }) => {
   // Colors
-  const cardBg = useColorModeValue('white', 'gray.700');
-  const answerBg = useColorModeValue('gray.50', 'gray.600');
+  const cardBg = useColorModeValue('gray.50', 'gray.700');
+  const answerBg = useColorModeValue('white', 'gray.600');
   
   return (
     <Box 
@@ -84,8 +84,9 @@ const FeedbackPanel = ({
                 onClick={onReset}
                 colorScheme="brand"
                 size="md"
-                _hover={{ bg: "brand.700" }}
-                _active={{ bg: "brand.900" }}
+                variant="outline"
+                _hover={{ bg: "brand.50" }}
+                // _active={{ bg: "brand.900" }}
               >
                 Try Again
               </Button>
@@ -94,11 +95,12 @@ const FeedbackPanel = ({
                 <Button 
                   leftIcon={<SaveIcon />}
                   onClick={() => onSaveResult(currentQuestion, userAnswer, feedback)}
-                  colorScheme="blue"
-                  variant="outline"
+                  colorScheme="brand"
+                  // variant="outline"
                   size="md"
                   isDisabled={isSaved}
-                  _hover={{ bg: "blue.50" }}
+                  _hover={{ bg: "brand.700" }}
+                  _active={{ bg: "brand.900" }}
                 >
                   Save Result
                 </Button>

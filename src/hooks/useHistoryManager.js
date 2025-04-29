@@ -177,10 +177,8 @@ const useHistoryManager = () => {
    * @returns {string} A color code or name
    */
   const getScoreColor = (score = 0) => {
-    if (score >= 90) return 'green.500';
-    if (score >= 80) return 'green.400';
-    if (score >= 70) return 'yellow.500';
-    if (score >= 60) return 'orange.500';
+    if (score >= 80) return 'green.500';
+    if (score >= 60) return 'yellow.500';
     return 'red.500';
   };
 

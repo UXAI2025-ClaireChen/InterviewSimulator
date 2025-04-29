@@ -70,11 +70,14 @@ const RecordedAnswer = ({
           mr={2}
           borderRadius="md"
           isDisabled={isAnalyzing}
+          _hover={{ bg: "brand.700" }}
+          _active={{ bg: "brand.900" }}
         >
           Submit Answer
         </Button>
         <Button
           onClick={resetRecording}
+          colorScheme="brand"
           variant="outline"
           flex="1"
           ml={2}
