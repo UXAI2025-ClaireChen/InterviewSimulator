@@ -24,7 +24,7 @@ import useResponseAnalysis from '../hooks/useResponseAnalysis';
 import useHistoryManager from '../hooks/useHistoryManager';
 
 /**
- * Main Interview Simulator component with history feature
+ * Main Interview Simulator component
  */
 const InterviewSimulator = () => {
   // State variables
@@ -35,7 +35,7 @@ const InterviewSimulator = () => {
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const [showHistoryDetail, setShowHistoryDetail] = useState(false);
   const [showQuestionPanel, setShowQuestionPanel] = useState(true);
-  
+
   // Custom hooks
   const {
     selectedTopic,
@@ -43,9 +43,9 @@ const InterviewSimulator = () => {
     isLoadingQuestions,
     changeTopic,
     selectRandomQuestion,
-    setCustomQuestion
+    setCustomQuestion,
   } = useQuestionManager('Teamwork');
-  
+
   const {
     isRecording,
     isPlayback,
@@ -60,14 +60,14 @@ const InterviewSimulator = () => {
     togglePlayback,
     resetRecording,
   } = useAudioRecording();
-  
+
   const {
     avatarUrl,
     isLoading: isLoadingAvatar,
     error: avatarError,
     selectRandomAvatar,
   } = useAvatarSelector('avatars');
-  
+
   const {
     feedback,
     isAnalyzing,
@@ -75,7 +75,7 @@ const InterviewSimulator = () => {
     resetFeedback,
     setFeedbackManually,
   } = useResponseAnalysis();
-  
+
   const {
     history,
     isHistoryOpen,
@@ -85,10 +85,10 @@ const InterviewSimulator = () => {
     toggleHistory,
     clearAllHistory,
   } = useHistoryManager();
-  
+
   // Background color
   const bg = useColorModeValue('gray.50', 'gray.900');
-  
+
   // Toggle between voice and text input modes
   const toggleTextMode = () => {
     setIsTextInputMode(!isTextInputMode);
@@ -117,65 +117,52 @@ const InterviewSimulator = () => {
     resetInterview();
     selectRandomAvatar();
   };
-  
-  // Handle saving result to history
+
+  // Save result to history
   const handleSaveResult = () => {
     const userAnswer = isTextInputMode ? textInputValue : recordedText;
-    
-    saveResult(
-      selectedTopic,
-      currentQuestion,
-      userAnswer,
-      feedback
-    );
-    
+    saveResult(selectedTopic, currentQuestion, userAnswer, feedback);
     setIsSaved(true);
   };
-  
-  // Handle selecting a history item
+
+  // Select a history item to view
   const handleSelectHistoryItem = (historyItem) => {
-    // Set the selected history item
     setSelectedHistoryItem(historyItem);
     setShowHistoryDetail(true);
-    setShowQuestionPanel(false); // 隱藏問題面板，顯示歷史詳情
-    
-    // Close the history sidebar on mobile
+    setShowQuestionPanel(false);
+
+    // Close sidebar on mobile
     if (window.innerWidth < 768) {
       toggleHistory();
     }
   };
-  
-  // Handle practicing the same question again
+
+  // Practice again with the same question
   const handlePracticeAgain = (historyItem) => {
-    // Reset the interview state
     resetInterview();
-    
-    // Set topic if different from current
+
     const itemTopic = historyItem.topic || selectedTopic;
     if (itemTopic !== selectedTopic) {
       changeTopic(itemTopic);
     }
 
     setCustomQuestion(historyItem.question);
-    
-    // Hide the history detail and show question panel
     setShowHistoryDetail(false);
     setShowQuestionPanel(true);
-    
-    // Close the history sidebar on mobile
+
     if (window.innerWidth < 768 && isHistoryOpen) {
       toggleHistory();
     }
   };
-  
-  // Close history detail panel and show the question panel
+
+  // Close history detail panel
   const handleCloseHistoryDetail = () => {
     setShowHistoryDetail(false);
     setSelectedHistoryItem(null);
     setShowQuestionPanel(true);
   };
-  
-  // Start a new question
+
+  // Start a new random question
   const handleStartNewQuestion = () => {
     handleQuestionChange();
     setShowHistoryDetail(false);
@@ -183,15 +170,15 @@ const InterviewSimulator = () => {
     setShowQuestionPanel(true);
   };
 
-  // Calculate content margin based on history sidebar state
-  const contentMargin = { 
-    base: 0, 
-    md: isHistoryOpen ? "300px" : 0 
+  // Content margin depending on sidebar state
+  const contentMargin = {
+    base: 0,
+    md: isHistoryOpen ? '300px' : 0,
   };
 
   return (
     <Box bg={bg} minH="100vh">
-      {/* History sidebar */}
+      {/* Sidebar */}
       <HistorySidebar
         history={history}
         isOpen={isHistoryOpen}
@@ -202,34 +189,34 @@ const InterviewSimulator = () => {
         getScoreColor={getScoreColor}
         selectedHistoryItemId={selectedHistoryItem?.id}
       />
-      
-      {/* History toggle button */}
-      <HistoryToggleButton 
+
+      {/* Sidebar toggle button */}
+      <HistoryToggleButton
         isOpen={isHistoryOpen}
         onClick={toggleHistory}
         display={{ base: 'block', md: 'block' }}
       />
-      
-      {/* "Start a new question" button - only shown when viewing history details */}
+
+      {/* New question button (only when viewing history details) */}
       {!showQuestionPanel && (
         <NewQuestionButton onClick={handleStartNewQuestion} />
       )}
-      
+
       {/* Main content */}
       <Box ml={contentMargin} transition="margin-left 0.3s">
         <Container maxW="5xl" py={8}>
           <VStack spacing={4} align="stretch">
-            {/* Header */}
+            {/* Page header */}
             <Box textAlign="center" py={6}>
               <Heading as="h1" size="3xl" fontWeight="semibold" mb={2}>
                 Behavior Question Training Platform
               </Heading>
             </Box>
-            
-            {/* Conditional Content - Either Question Panel or History Detail */}
+
+            {/* Conditional content: Question panel or History detail panel */}
             {showQuestionPanel ? (
               <VStack spacing={4} align="stretch">
-                {/* Question Panel */}
+                {/* Question panel */}
                 <QuestionPanel
                   selectedTopic={selectedTopic}
                   currentQuestion={currentQuestion}
@@ -241,8 +228,8 @@ const InterviewSimulator = () => {
                   avatarGenerationError={avatarError}
                   onGenerateAvatar={selectRandomAvatar}
                 />
-                
-                {/* Answer Panel */}
+
+                {/* Answer panel */}
                 <AnswerPanel
                   isTextInputMode={isTextInputMode}
                   toggleTextMode={toggleTextMode}
@@ -263,8 +250,8 @@ const InterviewSimulator = () => {
                   resetRecording={resetRecording}
                   handleTextInputSubmit={handleAnswerSubmit}
                 />
-                
-                {/* Feedback Panel */}
+
+                {/* Feedback panel */}
                 {feedback && (
                   <FeedbackPanel
                     feedback={feedback}
@@ -277,7 +264,6 @@ const InterviewSimulator = () => {
                 )}
               </VStack>
             ) : (
-              /* History Detail Panel - Shown when history item is selected */
               <HistoryDetailPanel
                 historyItem={selectedHistoryItem}
                 onClose={handleCloseHistoryDetail}

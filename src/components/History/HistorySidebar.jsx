@@ -16,7 +16,7 @@ import { ChevronLeftIcon } from '@chakra-ui/icons';
 import HistoryList from './HistoryList';
 
 /**
- * History sidebar component
+ * Sidebar component for displaying user's history
  */
 const HistorySidebar = ({
   history = {},
@@ -28,17 +28,18 @@ const HistorySidebar = ({
   getScoreColor,
   selectedHistoryItemId = null,
 }) => {
-  // Calculate if we should use a drawer on mobile
+  // Determine if the device is mobile
   const isMobile = useBreakpointValue({ base: true, md: false });
 
-  // Colors
+  // Colors for light/dark modes
   const bg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const headerBg = useColorModeValue('gray.50', 'gray.700');
 
-  // Content of the sidebar
+  // Sidebar main content
   const sidebarContent = (
     <>
+      {/* Header */}
       <Flex
         p={4}
         borderBottomWidth="1px"
@@ -48,7 +49,7 @@ const HistorySidebar = ({
         align="center"
       >
         <Heading size="md">My History</Heading>
-        {!isMobile && (
+        {/* {!isMobile && (
           <IconButton
             aria-label="Close sidebar"
             icon={<ChevronLeftIcon />}
@@ -56,9 +57,10 @@ const HistorySidebar = ({
             variant="ghost"
             onClick={onClose}
           />
-        )}
+        )} */}
       </Flex>
 
+      {/* History list */}
       <Box p={4}>
         <HistoryList
           history={history}
@@ -72,20 +74,22 @@ const HistorySidebar = ({
     </>
   );
 
-  // Responsive layout - drawer on mobile, sidebar on desktop
+  // Mobile version using Drawer
   if (isMobile) {
     return (
       <Drawer isOpen={isOpen} placement="left" onClose={onClose} size="xs">
         <DrawerOverlay />
         <DrawerContent>
           <DrawerHeader p={0} borderBottomWidth="0px" />
-          <DrawerBody p={0}>{sidebarContent}</DrawerBody>
+          <DrawerBody p={0}>
+            {sidebarContent}
+          </DrawerBody>
         </DrawerContent>
       </Drawer>
     );
   }
 
-  // Desktop sidebar
+  // Desktop version using fixed Box
   return (
     <Box
       position="fixed"
@@ -99,7 +103,7 @@ const HistorySidebar = ({
       borderColor={borderColor}
       transition="left 0.3s"
       overflowY="auto"
-      zIndex="1"
+      zIndex="99" // Lower than toggle button
     >
       {sidebarContent}
     </Box>
