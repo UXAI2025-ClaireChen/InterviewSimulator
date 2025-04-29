@@ -5,6 +5,9 @@ import {
   Heading,
   VStack,
   useColorModeValue,
+  Flex,
+  Image,
+  Link,
 } from '@chakra-ui/react';
 
 // Components
@@ -177,6 +180,17 @@ const InterviewSimulator = () => {
     md: isHistoryOpen ? '300px' : 0,
   };
 
+  // Function to navigate to homepage
+  const navigateToHome = () => {
+    // Reset the view to question panel and close any history detail
+    setShowQuestionPanel(true);
+    setShowHistoryDetail(false);
+    setSelectedHistoryItem(null);
+    
+    // You might want to reset other states as needed
+    resetInterview();
+  };
+
   return (
     <Box bg={bg} minH="100vh">
       {/* Sidebar */}
@@ -210,11 +224,22 @@ const InterviewSimulator = () => {
       <Box ml={contentMargin} transition="margin-left 0.3s">
         <Container maxW="5xl" py={8}>
           <VStack spacing={4} align="stretch">
-            {/* Page header */}
+            {/* Page header with clickable title and icon */}
             <Box textAlign="center" py={6}>
-              <Heading as="h1" size="3xl" fontWeight="semibold" mb={2}>
-                Behavior Question Training Platform
-              </Heading>
+              <Link onClick={navigateToHome} _hover={{ textDecoration: 'none' }}>
+                <Flex justifyContent="center" alignItems="center">
+                  <Image 
+                    // src="/favicon.png" 
+                    src={process.env.PUBLIC_URL + '/favicon.png'}
+                    alt="Logo" 
+                    boxSize="40px" 
+                    mr={2}
+                  />
+                  <Heading as="h1" size="3xl" fontWeight="semibold">
+                    Behavior Question Training Platform
+                  </Heading>
+                </Flex>
+              </Link>
             </Box>
 
             {/* Conditional content: Question panel or History detail panel */}

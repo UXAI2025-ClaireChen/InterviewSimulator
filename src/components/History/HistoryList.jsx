@@ -41,8 +41,6 @@ const HistoryList = ({
 
   return (
     <>
-      <Text mb={2} fontWeight="medium">Topics</Text>
-
       {Object.keys(history || {}).length === 0 ? (
         <Text fontSize="sm" color="gray.500" mt={4} textAlign="center">
           No history yet. Save your results after answering questions.
@@ -51,7 +49,7 @@ const HistoryList = ({
         <Accordion defaultIndex={[0]} allowMultiple>
           {Object.entries(history || {}).map(([topic, questions]) => (
             <AccordionItem key={topic} border="none">
-              <AccordionButton py={2} px={0}>
+              <AccordionButton py={2} px={0} _hover={{ bg: 'brand.50', _dark: { bg: 'brand.800' } }}>
                 <Box flex="1" textAlign="left" fontWeight="medium">
                   {topic}
                 </Box>
