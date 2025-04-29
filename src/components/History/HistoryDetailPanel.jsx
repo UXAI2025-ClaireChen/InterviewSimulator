@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Text,
@@ -30,10 +30,53 @@ const HistoryDetailPanel = ({
   history = {},
   selectedTopic = ''
 }) => {
+  // State to store attempt information
+  const [attemptInfo, setAttemptInfo] = useState({ count: 0, current: 0 });
+
   // Colors
   const bgColor = useColorModeValue('white', 'gray.800');
   const answerBg = useColorModeValue('gray.50', 'gray.600');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
+  
+  // Find the topic that contains this question and the historyItem
+  useEffect(() => {
+    if (historyItem && history) {
+      // Find which topic contains this question and historyItem
+      let foundTopic = '';
+      let questionAttempts = [];
+      
+      // Look through all topics
+      Object.entries(history).forEach(([topic, questions]) => {
+        // Look through all questions in this topic
+        Object.entries(questions).forEach(([question, attempts]) => {
+          // If this is our question and it contains our historyItem
+          if (question === historyItem.question && 
+              attempts.some(attempt => attempt.id === historyItem.id)) {
+            foundTopic = topic;
+            questionAttempts = attempts;
+          }
+        });
+      });
+      
+      // If we found matching topic and attempts
+      if (foundTopic && questionAttempts.length > 0) {
+        // Sort attempts by date (oldest first)
+        const sortedAttempts = [...questionAttempts].sort(
+          (a, b) => new Date(a.id) - new Date(b.id)
+        );
+        
+        // Find current attempt number
+        const currentIdx = sortedAttempts.findIndex(
+          item => item.id === historyItem.id
+        );
+        
+        setAttemptInfo({
+          count: questionAttempts.length,
+          current: currentIdx + 1
+        });
+      }
+    }
+  }, [historyItem, history]);
   
   // If no history item is selected, render empty message
   if (!historyItem) {
@@ -48,20 +91,6 @@ const HistoryDetailPanel = ({
         <Text>Click on any history item to view the details here.</Text>
       </Box>
     );
-  }
-  
-  // Count attempts for this question
-  let attemptCount = 0;
-  let currentAttemptNumber = 0;
-  
-  if (history && selectedTopic && historyItem.question) {
-    const questionAttempts = history[selectedTopic]?.[historyItem.question] || [];
-    attemptCount = questionAttempts.length;
-    
-    // Find current attempt number (position in the array)
-    // Sort by date in ascending order (oldest first)
-    const sortedAttempts = [...questionAttempts].sort((a, b) => new Date(a.id) - new Date(b.id));
-    currentAttemptNumber = sortedAttempts.findIndex(item => item.id === historyItem.id) + 1;
   }
   
   return (
@@ -79,7 +108,7 @@ const HistoryDetailPanel = ({
         <Flex align="center">
           <Tooltip label="The number of times you've attempted this question">
             <Badge mr={2} colorScheme="blue">
-              Attempt {currentAttemptNumber} of {attemptCount}
+              Attempt {attemptInfo.current} of {attemptInfo.count}
             </Badge>
           </Tooltip>
           <Button
@@ -98,12 +127,11 @@ const HistoryDetailPanel = ({
       
       {/* User's answer section */}
       <Box mb={8}>
-        <Heading size="lg" mb={4}>Question:</Heading>
+        <Heading size="lg" mb={4}>Question & Answer</Heading>
         <Box mb={4} p={4} borderWidth="1px" borderRadius="md" bg="gray.100" _dark={{ bg: 'gray.700' }}>
-          {/* <Text fontWeight="medium">Question:</Text> */}
+          <Text fontWeight="medium">Question:</Text>
           <Text ml={2} mt={1}>{historyItem.question}</Text>
         </Box>
-        <Heading size="lg" mb={4}>My Answer:</Heading>
         <Box 
           p={4} 
           borderWidth="1px" 
@@ -111,7 +139,7 @@ const HistoryDetailPanel = ({
           bg={answerBg}
           borderColor={borderColor}
         >
-          {/* <Text fontWeight="medium" mb={2}>My Answer:</Text> */}
+          <Text fontWeight="medium" mb={2}>My Answer:</Text>
           <Text whiteSpace="pre-wrap">{historyItem.answer}</Text>
         </Box>
       </Box>
