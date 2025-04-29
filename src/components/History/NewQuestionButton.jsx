@@ -17,7 +17,7 @@ const NewQuestionButton = ({
 }) => {
   // Colors
   const bgColor = useColorModeValue('white', 'gray.800');
-  const hoverBgColor = useColorModeValue('blue.50', 'blue.700');
+  const hoverBgColor = useColorModeValue('brand.50', 'brand.700');
   
   return (
     <Box 
@@ -36,7 +36,7 @@ const NewQuestionButton = ({
           borderRadius="full"
           boxShadow="md"
           bg={bgColor}
-          color="blue.500"
+          color="brand.500"
           _hover={{ 
             bg: hoverBgColor,
             transform: 'scale(1.05)',
