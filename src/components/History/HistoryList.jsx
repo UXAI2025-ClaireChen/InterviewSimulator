@@ -34,6 +34,11 @@ const HistoryList = ({
     }
   };
 
+  // Function to trim leading and trailing whitespace from questions
+  const trimQuestion = (question) => {
+    return question.trim();
+  };
+
   return (
     <>
       <Text mb={2} fontWeight="medium">Topics</Text>
@@ -57,13 +62,14 @@ const HistoryList = ({
                   {Object.entries(questions || {}).map(([question, entries]) => {
                     const bestScore = getBestScore(entries);
                     const attemptsCount = entries.length;
+                    const trimmedQuestion = trimQuestion(question);
                     
                     return (
                       <AccordionItem key={question} borderWidth="1px" borderRadius="md" mb={3} overflow="hidden">
                         <AccordionButton py={2} px={3} bg="gray.50" _dark={{ bg: 'gray.700' }}>
                           <Box flex="1">
                             <Text fontSize="sm" fontWeight="medium" noOfLines={1}>
-                              {question}
+                              {trimmedQuestion}
                             </Text>
                             <Flex mt={1} alignItems="center">
                               <Badge 
