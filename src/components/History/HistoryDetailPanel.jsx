@@ -15,9 +15,12 @@ import {
 import { ArrowBackIcon, RepeatIcon } from '@chakra-ui/icons';
 import OverallScore from '../FeedbackPanel/OverallScore';
 import StarEvaluation from '../FeedbackPanel/StarEvaluation';
+import MetricsGrid from '../FeedbackPanel/MetricsGrid';
+import SuggestionsList from '../FeedbackPanel/SuggestionsList';
+import ExampleAnswer from '../FeedbackPanel/ExampleAnswer';
 
 /**
- * Component to display history item details directly on the screen
+ * Component to display history item details using the same format as FeedbackPanel
  */
 const HistoryDetailPanel = ({ 
   historyItem, 
@@ -30,13 +33,12 @@ const HistoryDetailPanel = ({
   // Colors
   const bgColor = useColorModeValue('white', 'gray.800');
   const answerBg = useColorModeValue('gray.50', 'gray.600');
-  const headingBg = useColorModeValue('gray.50', 'gray.700');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
   
   // If no history item is selected, render empty message
   if (!historyItem) {
     return (
       <Box 
-        bg={bgColor} 
         p={6} 
         borderRadius="md" 
         boxShadow="md" 
@@ -63,127 +65,85 @@ const HistoryDetailPanel = ({
   }
   
   return (
-    <Box 
-      bg={bgColor} 
-      borderRadius="md" 
-      boxShadow="md"
-      overflow="hidden"
-    >
-      {/* Header with navigation */}
-      <Flex 
-        bg={headingBg} 
-        p={4} 
-        borderBottomWidth="1px" 
-        align="center" 
-        justify="space-between"
-      >
+    <Box width="100%">
+      {/* Navigation Header */}
+      <Flex align="center" mb={4}>
+        <IconButton
+          icon={<ArrowBackIcon />}
+          aria-label="Go back"
+          variant="ghost"
+          mr={2}
+          onClick={onClose}
+        />
+        <Heading size="md" flex="1" noOfLines={1}>{historyItem.question}</Heading>
         <Flex align="center">
-          <IconButton
-            icon={<ArrowBackIcon />}
-            aria-label="Go back"
-            variant="ghost"
-            mr={2}
-            onClick={onClose}
-          />
-          <Heading size="md" noOfLines={1}>{historyItem.question}</Heading>
-        </Flex>
-        <Badge 
-          colorScheme={historyItem.score >= 80 ? 'green' : historyItem.score >= 60 ? 'yellow' : 'red'}
-          fontSize="sm"
-          py={1}
-          px={2}
-          borderRadius="full"
-        >
-          Score: {historyItem.score}
-        </Badge>
-      </Flex>
-      
-      {/* Date and metadata */}
-      <Flex px={4} py={2} bg={headingBg} borderBottomWidth="1px" justify="space-between" align="center">
-        <Flex align="center">
-          <Text fontSize="sm" color="gray.500">
-            {new Date(historyItem.id).toLocaleString()}
-          </Text>
           <Tooltip label="The number of times you've attempted this question">
-            <Badge ml={2} colorScheme="blue">
+            <Badge mr={2} colorScheme="blue">
               Attempt {currentAttemptNumber} of {attemptCount}
             </Badge>
           </Tooltip>
+          <Button
+            leftIcon={<RepeatIcon />}
+            colorScheme="blue"
+            size="sm"
+            variant="outline"
+            onClick={() => onPracticeAgain(historyItem)}
+          >
+            Practice Again
+          </Button>
         </Flex>
-        <Button
-          leftIcon={<RepeatIcon />}
-          colorScheme="blue"
-          size="sm"
-          variant="outline"
-          onClick={() => onPracticeAgain(historyItem)}
-        >
-          Practice Again
-        </Button>
       </Flex>
       
-      {/* Content */}
-      <Box p={6} maxH={{base: "calc(100vh - 200px)", md: "calc(100vh - 220px)"}} overflow="auto">
-        <VStack spacing={6} align="stretch">
-          {/* User's answer */}
-          <Box>
-            <Heading size="md" mb={2}>My Answer</Heading>
-            <Box 
-              p={4} 
-              borderWidth="1px" 
-              borderRadius="md" 
-              borderColor="gray.200"
-              bg={answerBg}
-            >
-              <Text whiteSpace="pre-wrap">{historyItem.answer}</Text>
-            </Box>
-          </Box>
+      <Divider mb={4} />
+      
+      {/* User's answer section */}
+      <Box mb={8}>
+        <Heading size="lg" mb={4}>Question:</Heading>
+        <Box mb={4} p={4} borderWidth="1px" borderRadius="md" bg="gray.100" _dark={{ bg: 'gray.700' }}>
+          {/* <Text fontWeight="medium">Question:</Text> */}
+          <Text ml={2} mt={1}>{historyItem.question}</Text>
+        </Box>
+        <Heading size="lg" mb={4}>My Answer:</Heading>
+        <Box 
+          p={4} 
+          borderWidth="1px" 
+          borderRadius="md" 
+          bg={answerBg}
+          borderColor={borderColor}
+        >
+          {/* <Text fontWeight="medium" mb={2}>My Answer:</Text> */}
+          <Text whiteSpace="pre-wrap">{historyItem.answer}</Text>
+        </Box>
+      </Box>
+      
+      <Divider mb={8} />
+      
+      <Box pb={8}>
+        <Heading size="2xl">AI Feedback & Suggestions</Heading>
+        <Text mt={2} fontSize="sm" color="gray.500">
+          Recorded on {new Date(historyItem.id).toLocaleString()}
+        </Text>
+      </Box>
+      
+      <Box>
+        <VStack spacing={8} align="stretch">
+          {/* Overall score */}
+          <OverallScore
+            score={historyItem.score} 
+            feedback={historyItem.feedback?.generalFeedback || ''} 
+          />
           
-          <Divider />
+          {/* STAR evaluation */}
+          <StarEvaluation categories={historyItem.feedback?.categories || {}} />
           
-          {/* Feedback */}
-          <Box>
-            <Heading size="md" mb={4}>AI Feedback</Heading>
-            
-            <Box mb={4}>
-              <OverallScore 
-                score={historyItem.score} 
-                feedback={historyItem.feedback?.generalFeedback || ''} 
-              />
-            </Box>
-            
-            <Box mb={4}>
-              <StarEvaluation categories={historyItem.feedback?.categories || {}} />
-            </Box>
-            
-            {historyItem.feedback?.improvementSuggestions?.length > 0 && (
-              <Box mt={4}>
-                <Heading size="sm" mb={2}>Improvement Suggestions</Heading>
-                <Box p={3} borderWidth="1px" borderRadius="md" bg={answerBg}>
-                  <VStack align="start" spacing={2}>
-                    {historyItem.feedback.improvementSuggestions.map((suggestion, index) => (
-                      <Text key={index}>• {suggestion}</Text>
-                    ))}
-                  </VStack>
-                </Box>
-              </Box>
-            )}
-          </Box>
+          {/* Additional metrics */}
+          <MetricsGrid metrics={historyItem.feedback?.additionalMetrics || {}} />
           
-          <Divider />
+          {/* Improvement suggestions */}
+          <SuggestionsList suggestions={historyItem.feedback?.improvementSuggestions || []} />
           
           {/* Example answer */}
-          <Box>
-            <Heading size="md" mb={2}>Example Answer</Heading>
-            <Box 
-              p={4} 
-              borderWidth="1px" 
-              borderRadius="md" 
-              borderColor="gray.200"
-              bg={answerBg}
-            >
-              <Text whiteSpace="pre-wrap">{historyItem.feedback?.exampleAnswer || ''}</Text>
-            </Box>
-          </Box>
+          <ExampleAnswer exampleText={historyItem.feedback?.exampleAnswer || "No example available for this question."} />
         </VStack>
       </Box>
     </Box>

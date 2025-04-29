@@ -80,9 +80,9 @@ const HistoryList = ({
                           </Flex>
                         </AccordionButton>
                         <AccordionPanel pb={3} pt={2} px={2}>
-                          <Text fontSize="xs" mb={2} color="gray.600" _dark={{ color: 'gray.400' }}>
+                          {/* <Text fontSize="xs" mb={2} color="gray.600" _dark={{ color: 'gray.400' }}>
                             Most recent attempts first
-                          </Text>
+                          </Text> */}
                           <VStack spacing={2} align="stretch">
                             {(entries || [])
                               .sort((a, b) => new Date(b.id) - new Date(a.id)) // Sort by date, newest first
