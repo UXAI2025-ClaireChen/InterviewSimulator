@@ -14,6 +14,7 @@ import {
 } from '@chakra-ui/react';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
 import HistoryList from './HistoryList';
+import HistoryToggleButton from './HistoryToggleButton';
 
 /**
  * Sidebar component for displaying user's history
@@ -50,15 +51,13 @@ const HistorySidebar = ({
         align="center"
       >
         <Heading size="md">My History</Heading>
-        {/* {!isMobile && (
-          <IconButton
-            aria-label="Close sidebar"
-            icon={<ChevronLeftIcon />}
-            size="sm"
-            variant="ghost"
-            onClick={onClose}
-          />
-        )} */}
+        
+        {/* Toggle button inside sidebar when open */}
+        <HistoryToggleButton 
+          isOpen={isOpen} 
+          onClick={onClose} 
+          insideSidebar={true} 
+        />
       </Flex>
 
       {/* History list */}

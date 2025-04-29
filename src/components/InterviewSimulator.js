@@ -192,12 +192,14 @@ const InterviewSimulator = () => {
         selectedHistoryItemId={selectedHistoryItem?.id}
       />
 
-      {/* Sidebar toggle button */}
-      <HistoryToggleButton
-        isOpen={isHistoryOpen}
-        onClick={toggleHistory}
-        display={{ base: 'block', md: 'block' }}
-      />
+      {/* Standalone toggle button - only shown when sidebar is closed */}
+      {!isHistoryOpen && (
+        <HistoryToggleButton
+          isOpen={false}
+          onClick={toggleHistory}
+          insideSidebar={false}
+        />
+      )}
 
       {/* New question button (only when viewing history details) */}
       {!showQuestionPanel && (
