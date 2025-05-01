@@ -61,27 +61,31 @@ const HistoryList = ({
                     const bestScore = getBestScore(entries);
                     const attemptsCount = entries.length;
                     const trimmedQuestion = trimQuestion(question);
-                    
                     return (
                       <AccordionItem key={question} borderWidth="1px" borderRadius="md" mb={3} overflow="hidden">
                         <AccordionButton py={2} px={3} bg="gray.50" _dark={{ bg: 'gray.700' }}>
                           <Box flex="1">
-                            <Text fontSize="sm" fontWeight="medium" noOfLines={1}>
+                            <Text
+                              fontSize="sm"
+                              fontWeight="medium"
+                              noOfLines={1}
+                              mb={1}
+                              textAlign="left"
+                            >
                               {trimmedQuestion}
                             </Text>
-                            <Flex mt={1} alignItems="center">
-                              <Badge 
+                            <Flex alignItems="center">
+                              <Badge
+                                minWidth="32px"
+                                textAlign="center"
                                 colorScheme={bestScore >= 80 ? 'green' : bestScore >= 60 ? 'yellow' : 'red'}
                                 variant="solid"
                                 mr={2}
                               >
                                 {bestScore}
                               </Badge>
-                              <Badge
-                                bg="brand.100"
-                                color="brand.700"
-                                >
-                                {attemptsCount} {attemptsCount === 1 ? 'attempt' : 'attempts'}
+                              <Badge bg="brand.100" color="brand.700">
+                                {attemptsCount} {attemptsCount === 1 ? 'ATTEMPT' : 'ATTEMPTS'}
                               </Badge>
                             </Flex>
                           </Box>

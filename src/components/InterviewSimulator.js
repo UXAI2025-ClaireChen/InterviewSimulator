@@ -8,6 +8,7 @@ import {
   Flex,
   Image,
   Link,
+  Text
 } from '@chakra-ui/react';
 
 // Components
@@ -225,7 +226,7 @@ const InterviewSimulator = () => {
         <Container maxW="5xl" py={8}>
           <VStack spacing={4} align="stretch">
             {/* Page header with clickable title and icon */}
-            <Box textAlign="center" py={6}>
+            <Box textAlign="center" pt={0} pb={6}>
               <Link onClick={navigateToHome} _hover={{ textDecoration: 'none' }}>
                 <Flex justifyContent="center" alignItems="center">
                   <Image 
@@ -236,9 +237,12 @@ const InterviewSimulator = () => {
                     mr={2}
                   />
                   <Heading as="h1" size="3xl" fontWeight="semibold">
-                    Behavior Question Training Platform
+                    Mocky
                   </Heading>
                 </Flex>
+                <Text fontSize="md" color="brand.700" mt={1}>
+                  Your friendly AI interview coach
+                </Text>
               </Link>
             </Box>
 
